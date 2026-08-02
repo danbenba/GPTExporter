@@ -103,9 +103,17 @@ function blockToNormalized(
       return blocks;
     }
     case 'thinking': {
-      if (block.hidden || block.thinking_hidden) return [];
-      const text = (block.thinking ?? '').trim();
-      return text ? [{ kind: 'thought', text }] : [];
+      const summary = (block.summaries ?? [])
+        .map((entry) => (entry.summary ?? '').trim())
+        .filter(Boolean)
+        .join(' — ');
+      const detail = block.hidden || block.thinking_hidden ? '' : (block.thinking ?? '').trim();
+
+      if (!detail) {
+        return summary ? [{ kind: 'thought', text: summary }] : [];
+      }
+      const title = summary && !detail.startsWith(summary) ? summary : undefined;
+      return [{ kind: 'thought', text: detail, title }];
     }
     case 'tool_use': {
       if (block.name && ARTIFACT_TOOLS.has(block.name)) {
