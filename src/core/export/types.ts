@@ -1,4 +1,3 @@
-import type { ApiConversationWithId } from '@/core/model/conversation';
 import type { ExportFormat, ExportOptions } from '@/core/model/export-options';
 import type { NormalizedConversation } from '@/core/model/normalized';
 
@@ -8,7 +7,7 @@ export interface AssetMap {
 
 export interface ExportInput {
   conversation: NormalizedConversation;
-  raw: ApiConversationWithId;
+  raw: unknown;
   options: ExportOptions;
   assets: AssetMap;
   locale: string;

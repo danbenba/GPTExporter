@@ -7,6 +7,7 @@ export const jsonExporter: Exporter = {
     const payload = {
       exporter: 'GPT Exporter',
       exported_at: new Date().toISOString(),
+      source: conversation.source ?? 'chatgpt',
       url: conversation.url,
       conversation: raw,
       normalized: conversation,

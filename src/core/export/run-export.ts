@@ -1,30 +1,41 @@
-import { fetchConversation } from '@/core/api/conversation-service';
 import type { ExportOptions } from '@/core/model/export-options';
+import type { Provider } from '@/core/providers/types';
 import { getLocale } from '@/i18n';
 import { collectAssets } from './assets';
 import { triggerDownload, triggerPrint } from './download';
 import { applyExportOptions } from './filter';
 import { getExporter } from './registry';
-import { normalizeConversation } from '@/core/tree/normalize';
 
 export type ExportPhase = 'fetching' | 'assets' | 'rendering';
 
 export interface ExportRequest {
+  provider: Provider;
   conversationId: string;
   options: ExportOptions;
   messageId?: string | null;
   extraMessageId?: string | null;
+  messageIndex?: number | null;
+  extraMessageIndex?: number | null;
   toClipboard?: boolean;
   onPhase?: (phase: ExportPhase) => void;
 }
 
 export async function runExport(request: ExportRequest): Promise<string> {
-  const { conversationId, options, messageId, extraMessageId, toClipboard, onPhase } = request;
+  const {
+    provider,
+    conversationId,
+    options,
+    messageId,
+    extraMessageId,
+    messageIndex,
+    extraMessageIndex,
+    toClipboard,
+    onPhase,
+  } = request;
 
   onPhase?.('fetching');
-  const raw = await fetchConversation(conversationId);
-  const url = `${location.origin}/c/${raw.id}`;
-  let normalized = applyExportOptions(normalizeConversation(raw, url), options);
+  const { normalized: fetched, raw } = await provider.fetchConversation(conversationId);
+  let normalized = applyExportOptions(fetched, options);
 
   if (messageId) {
     const wanted = new Set([messageId, extraMessageId].filter(Boolean) as string[]);
@@ -32,13 +43,27 @@ export async function runExport(request: ExportRequest): Promise<string> {
       ...normalized,
       messages: normalized.messages.filter((message) => wanted.has(message.id)),
     };
+  } else if (typeof messageIndex === 'number' && messageIndex >= 0) {
+    const wanted = new Set(
+      [messageIndex, extraMessageIndex].filter(
+        (index): index is number => typeof index === 'number' && index >= 0,
+      ),
+    );
+    normalized = {
+      ...normalized,
+      messages: normalized.messages.filter((_, index) => wanted.has(index)),
+    };
   }
 
   onPhase?.('assets');
   const wantsAssets =
     options.format === 'html' || options.format === 'pdf' || options.format === 'markdown';
   const assets = wantsAssets
-    ? await collectAssets(normalized, options.embedImages && options.format !== 'markdown')
+    ? await collectAssets(
+        normalized,
+        options.embedImages && options.format !== 'markdown',
+        provider,
+      )
     : {};
 
   onPhase?.('rendering');
