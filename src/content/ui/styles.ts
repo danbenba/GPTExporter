@@ -29,7 +29,7 @@ export const shadowStyles = `
 
 .gptx-modal {
   position: relative;
-  width: 560px;
+  width: 600px;
   max-width: calc(100vw - 32px);
   max-height: 90vh;
   display: flex;
@@ -69,7 +69,7 @@ export const shadowStyles = `
 .gptx-close svg { width: 20px; height: 20px; }
 
 .gptx-body {
-  padding: 8px 24px 20px;
+  padding: 8px 24px 24px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -213,7 +213,7 @@ export const shadowStyles = `
   opacity: 0;
   transition: max-height .28s ease, opacity .2s ease;
 }
-.gptx-adv.open { max-height: 560px; opacity: 1; }
+.gptx-adv.open { max-height: 640px; opacity: 1; }
 
 .gptx-row {
   display: flex;
