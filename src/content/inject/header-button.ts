@@ -1,20 +1,21 @@
 import { t } from '@/i18n';
-import { selectors } from '@/content/dom/selectors';
+import type { Provider } from '@/core/providers/types';
 import { logoSvg } from '@/content/ui/icons';
 import { ensurePageStyles } from './page-styles';
 
 const BUTTON_ID = 'gptx-header-export';
 
-export function mountHeaderButton(onClick: () => void): void {
+export function mountHeaderButton(provider: Provider, onClick: () => void): void {
   if (document.getElementById(BUTTON_ID)) return;
-  const headerActions = document.querySelector(selectors.headerActions);
-  if (!headerActions) return;
+  const anchor = document.querySelector(provider.selectors.headerAnchor);
+  if (!anchor) return;
 
-  ensurePageStyles();
+  ensurePageStyles(provider);
 
   const button = document.createElement('button');
   button.id = BUTTON_ID;
   button.className = 'gptx-header-btn';
+  button.type = 'button';
   button.setAttribute('aria-label', t('exportChat'));
   button.title = t('exportChat');
   button.innerHTML = `${logoSvg}<span>${t('exportChat')}</span>`;
@@ -24,12 +25,19 @@ export function mountHeaderButton(onClick: () => void): void {
     onClick();
   });
 
-  const acrobat = document.querySelector(selectors.acrobatHeaderButton);
-  if (acrobat?.parentElement) {
-    acrobat.parentElement.insertBefore(button, acrobat);
+  const competitor = provider.selectors.competitorHeaderButton
+    ? document.querySelector(provider.selectors.competitorHeaderButton)
+    : null;
+  if (competitor?.parentElement) {
+    competitor.parentElement.insertBefore(button, competitor);
     return;
   }
-  headerActions.insertBefore(button, headerActions.firstChild);
+
+  if (provider.id === 'claude') {
+    anchor.parentElement?.insertBefore(button, anchor);
+    return;
+  }
+  anchor.insertBefore(button, anchor.firstChild);
 }
 
 export function unmountHeaderButton(): void {
