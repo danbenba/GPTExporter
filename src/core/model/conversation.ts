@@ -47,8 +47,7 @@ export type MultimodalPart =
   | string
   | ImageAssetPointer
   | AudioAssetPointer
-  | AudioTranscriptionPart
-  | { content_type: string; [key: string]: unknown };
+  | AudioTranscriptionPart;
 
 export interface MultimodalTextContent {
   content_type: 'multimodal_text';
@@ -101,8 +100,7 @@ export type MessageContent =
   | SystemErrorContent
   | UserEditableContextContent
   | ThoughtsContent
-  | ReasoningRecapContent
-  | { content_type: string; [key: string]: unknown };
+  | ReasoningRecapContent;
 
 export interface Citation {
   start_ix?: number;
