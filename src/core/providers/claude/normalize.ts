@@ -20,14 +20,14 @@ import {
 } from './artifacts';
 
 export function walkClaudeBranch(conversation: ClaudeConversation): ClaudeMessage[] {
-  const byUuid = new Map(conversation.chat_messages.map((message) => [message.uuid, message]));
+  const all = conversation.chat_messages ?? [];
+  const byUuid = new Map(all.map((message) => [message.uuid, message]));
   const ordered: ClaudeMessage[] = [];
   const seen = new Set<string>();
 
-  const messages = conversation.chat_messages ?? [];
   let cursor: string | null | undefined = conversation.current_leaf_message_uuid;
   if (!cursor || !byUuid.has(cursor)) {
-    cursor = messages[messages.length - 1]?.uuid;
+    cursor = all[all.length - 1]?.uuid;
   }
   while (cursor && cursor !== CLAUDE_ROOT_PARENT && byUuid.has(cursor) && !seen.has(cursor)) {
     seen.add(cursor);
@@ -37,7 +37,7 @@ export function walkClaudeBranch(conversation: ClaudeConversation): ClaudeMessag
   }
 
   if (ordered.length === 0) {
-    return [...conversation.chat_messages].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+    return [...all].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
   }
   ordered.reverse();
   return ordered;
@@ -109,11 +109,8 @@ function blockToNormalized(
         .join(' — ');
       const detail = block.hidden || block.thinking_hidden ? '' : (block.thinking ?? '').trim();
 
-      if (!detail) {
-        return summary ? [{ kind: 'thought', text: summary }] : [];
-      }
-      const title = summary && !detail.startsWith(summary) ? summary : undefined;
-      return [{ kind: 'thought', text: detail, title }];
+      if (!detail && !summary) return [];
+      return [{ kind: 'thought', text: detail || summary, title: summary || undefined }];
     }
     case 'tool_use': {
       if (block.name && ARTIFACT_TOOLS.has(block.name)) {
