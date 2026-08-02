@@ -1,3 +1,5 @@
+import { detectProvider } from '@/core/providers/registry';
+import type { Provider } from '@/core/providers/types';
 import { detectLocale, setLocale } from '@/i18n';
 import { RUNTIME_MESSAGES } from '@/shared/constants';
 import { logger } from '@/shared/logger';
@@ -5,22 +7,25 @@ import { observeDom } from './dom/observe';
 import { describeTurn } from './dom/turn-index';
 import { mountHeaderButton, unmountHeaderButton } from './inject/header-button';
 import { mountTurnButtons, unmountTurnButtons } from './inject/turn-buttons';
-import { getConversationId, watchLocation } from './router';
+import { watchLocation } from './router';
 import { exportModal } from './ui/modal';
 
+let provider: Provider | null = null;
 let activeConversationId: string | null = null;
 let mountScheduled = false;
 
 function openModal(): void {
-  const conversationId = activeConversationId ?? getConversationId();
+  if (!provider) return;
+  const conversationId = activeConversationId ?? provider.getConversationId();
   if (!conversationId) return;
-  void exportModal.open({ conversationId });
+  void exportModal.open({ provider, conversationId });
 }
 
 function openMessageModal(turn: HTMLElement): void {
-  const conversationId = activeConversationId ?? getConversationId();
+  if (!provider) return;
+  const conversationId = activeConversationId ?? provider.getConversationId();
   if (!conversationId) return;
-  void exportModal.open({ conversationId, turn: describeTurn(turn) });
+  void exportModal.open({ provider, conversationId, turn: describeTurn(provider, turn) });
 }
 
 function scheduleMount(): void {
@@ -28,10 +33,10 @@ function scheduleMount(): void {
   mountScheduled = true;
   setTimeout(() => {
     mountScheduled = false;
-    if (!activeConversationId) return;
+    if (!provider || !activeConversationId) return;
     setLocale(detectLocale());
-    mountHeaderButton(openModal);
-    mountTurnButtons(openMessageModal);
+    mountHeaderButton(provider, openModal);
+    mountTurnButtons(provider, openMessageModal);
   }, 50);
 }
 
@@ -46,8 +51,11 @@ function handleConversationChange(conversationId: string | null): void {
 }
 
 function bootstrap(): void {
+  provider = detectProvider();
+  if (!provider) return;
+
   setLocale(detectLocale());
-  watchLocation(handleConversationChange);
+  watchLocation(provider, handleConversationChange);
   observeDom(() => {
     if (activeConversationId) scheduleMount();
   });
@@ -58,12 +66,16 @@ function bootstrap(): void {
       sendResponse({ ok: true });
     }
     if (message?.type === RUNTIME_MESSAGES.getPageStatus) {
-      sendResponse({ conversationId: activeConversationId ?? getConversationId() });
+      sendResponse({
+        provider: provider?.id ?? null,
+        label: provider?.label ?? null,
+        conversationId: activeConversationId ?? provider?.getConversationId() ?? null,
+      });
     }
     return undefined;
   });
 
-  logger.info('content script ready');
+  logger.info(`content script ready (${provider.label})`);
 }
 
 bootstrap();

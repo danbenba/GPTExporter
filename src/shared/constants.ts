@@ -1,6 +1,8 @@
-export const CHATGPT_ORIGINS = ['https://chatgpt.com', 'https://chat.openai.com'] as const;
-
-export const CONVERSATION_PATH_PATTERN = /\/(?:g\/[^/]+\/)?c\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+export const SUPPORTED_ORIGINS = [
+  'https://chatgpt.com',
+  'https://chat.openai.com',
+  'https://claude.ai',
+] as const;
 
 export const EXTENSION_PREFIX = 'gptx';
 

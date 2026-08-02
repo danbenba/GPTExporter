@@ -30,11 +30,15 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
+      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*', 'https://claude.ai/*'],
       js: ['src/content/index.ts'],
       run_at: 'document_idle',
     },
   ],
   permissions: ['storage'],
-  host_permissions: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
+  host_permissions: [
+    'https://chatgpt.com/*',
+    'https://chat.openai.com/*',
+    'https://claude.ai/*',
+  ],
 });

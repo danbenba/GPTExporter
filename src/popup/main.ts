@@ -1,11 +1,11 @@
 import { detectLocale, setLocale, t } from '@/i18n';
-import { CHATGPT_ORIGINS, RUNTIME_MESSAGES } from '@/shared/constants';
+import { RUNTIME_MESSAGES, SUPPORTED_ORIGINS } from '@/shared/constants';
 
 const statusEl = document.getElementById('status') as HTMLParagraphElement;
 const actionEl = document.getElementById('action') as HTMLButtonElement;
 
-function isChatGptUrl(url: string | undefined): boolean {
-  return Boolean(url && CHATGPT_ORIGINS.some((origin) => url.startsWith(origin)));
+function isSupportedUrl(url: string | undefined): boolean {
+  return Boolean(url && SUPPORTED_ORIGINS.some((origin) => url.startsWith(origin)));
 }
 
 async function init(): Promise<void> {
@@ -13,7 +13,7 @@ async function init(): Promise<void> {
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  if (!tab?.id || !isChatGptUrl(tab.url)) {
+  if (!tab?.id || !isSupportedUrl(tab.url)) {
     statusEl.textContent = t('popupNotChatGpt');
     actionEl.hidden = false;
     actionEl.textContent = t('popupGoToChatGpt');
