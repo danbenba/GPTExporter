@@ -13,7 +13,8 @@ export const grokProvider: Provider = {
   theme: grokTheme,
   selectors: {
     headerAnchor: 'button[aria-label="Créer un lien de partage"], button[aria-label="Share"]',
-    turnActionButton: 'button[aria-label="Copier"], button[aria-label="Copy"]',
+    turnActionButton:
+      'button[aria-label="Copy response"], button[aria-label="Copier la réponse"], button[aria-label="Copier"], button[aria-label="Copy"]',
     conversationTurn: '.message-bubble',
     messageIdAttribute: 'data-response-id',
     messageRoleAttribute: 'data-sender',

@@ -5,11 +5,19 @@ import { ensurePageStyles } from './page-styles';
 
 const TURN_BUTTON_CLASS = 'gptx-turn-btn';
 
+const TURN_MARKERS: Partial<Record<Provider['id'], string>> = {
+  claude: '.font-claude-response, [data-testid="user-message"]',
+  grok: '.message-bubble, [class*="response-content"]',
+  gemini: 'model-response, user-query',
+  perplexity: '[class*="prose"]',
+};
+
 function resolveTurn(provider: Provider, anchor: Element): HTMLElement | null {
-  if (provider.id === 'claude') {
+  const marker = TURN_MARKERS[provider.id];
+  if (marker) {
     let node: HTMLElement | null = anchor.parentElement;
-    for (let depth = 0; depth < 8 && node; depth += 1) {
-      if (node.querySelector('.font-claude-response, [data-testid="user-message"]')) return node;
+    for (let depth = 0; depth < 10 && node; depth += 1) {
+      if (node.querySelector(marker)) return node;
       node = node.parentElement;
     }
     return anchor.parentElement;

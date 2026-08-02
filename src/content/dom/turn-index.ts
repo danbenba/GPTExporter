@@ -56,7 +56,55 @@ function claudeIndexOf(turn: HTMLElement): number {
   return claudeTurns().findIndex((node) => turn.contains(node) || node === turn);
 }
 
+const POSITIONAL_MARKERS: Partial<Record<Provider['id'], string>> = {
+  claude: '[data-testid="user-message"], .font-claude-response',
+  grok: '.message-bubble, [class*="response-content"]',
+  gemini: 'user-query, model-response',
+  perplexity: '[class*="prose"]',
+};
+
+function positionalNodes(provider: Provider): HTMLElement[] {
+  const marker = POSITIONAL_MARKERS[provider.id];
+  if (!marker) return [];
+  return [...document.querySelectorAll<HTMLElement>(marker)];
+}
+
+function isUserNode(provider: Provider, node: HTMLElement): boolean {
+  if (provider.id === 'claude') return node.getAttribute('data-testid') === 'user-message';
+  if (provider.id === 'gemini') return node.tagName.toLowerCase() === 'user-query';
+  if (provider.id === 'grok') return node.classList.contains('message-bubble');
+  return false;
+}
+
 export function describeTurn(provider: Provider, turn: HTMLElement): TurnLocation {
+  if (provider.id !== 'chatgpt' && provider.id !== 'claude') {
+    const nodes = positionalNodes(provider);
+    const position = nodes.findIndex((node) => turn.contains(node) || node === turn);
+    const current = nodes[position] ?? null;
+    const role = current && isUserNode(provider, current) ? 'user' : 'assistant';
+    const preview = current ? clean(current.innerText ?? '') : null;
+
+    let previousUser: string | null = null;
+    let previousUserIndex: number | null = null;
+    for (let index = position - 1; index >= 0; index -= 1) {
+      if (isUserNode(provider, nodes[index])) {
+        previousUser = clean(nodes[index].innerText ?? '');
+        previousUserIndex = index;
+        break;
+      }
+    }
+
+    return {
+      messageId: null,
+      messageIndex: position >= 0 ? position : null,
+      userMessageIndex: role === 'user' ? position : previousUserIndex,
+      role,
+      userPreview: role === 'user' ? preview : previousUser,
+      assistantPreview: role === 'assistant' ? preview : null,
+      userMessageId: null,
+    };
+  }
+
   if (provider.id === 'claude') {
     const nodes = claudeTurns();
     const position = claudeIndexOf(turn);
