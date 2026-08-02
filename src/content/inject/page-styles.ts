@@ -51,6 +51,40 @@ function css(provider: Provider): string {
   color: ${isClaude ? 'inherit' : 'var(--text-primary, #fff)'};
 }
 .gptx-turn-btn svg { width: ${isClaude ? '15px' : '16px'}; height: ${isClaude ? '15px' : '16px'}; flex: none; display: block; }
+
+.gptx-turn-sep {
+  display: inline-block;
+  flex: none;
+  align-self: center;
+  width: 1px;
+  height: ${isClaude ? '16px' : '18px'};
+  margin: 0 6px;
+  background: ${isClaude ? 'rgba(255,255,255,.12)' : 'var(--border-default, rgba(255,255,255,.15))'};
+}
+
+.gptx-menu-item-gptx {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  text-align: start;
+  cursor: pointer;
+}
+.gptx-menu-item-gptx:hover { background: rgba(255,255,255,.1); }
+.gptx-menu-item-gptx svg { width: 16px; height: 16px; flex: none; display: block; }
+.gptx-menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: ${isClaude ? 'rgba(255,255,255,.1)' : 'var(--border-light, rgba(255,255,255,.1))'};
+}
 `;
 }
 

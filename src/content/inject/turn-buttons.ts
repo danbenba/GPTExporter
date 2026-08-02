@@ -45,19 +45,24 @@ export function mountTurnButtons(
       onClick(turn);
     });
 
+    const separator = document.createElement('span');
+    separator.className = 'gptx-turn-sep';
+    separator.setAttribute('aria-hidden', 'true');
+
     const competitor = provider.selectors.competitorTurnButton
       ? bar.querySelector(provider.selectors.competitorTurnButton)
       : null;
     if (competitor?.parentElement === bar) {
+      bar.insertBefore(separator, competitor);
       bar.insertBefore(button, competitor);
     } else {
-      bar.appendChild(button);
+      bar.append(separator, button);
     }
   }
 }
 
 export function unmountTurnButtons(): void {
-  for (const button of document.querySelectorAll(`.${TURN_BUTTON_CLASS}`)) {
-    button.remove();
+  for (const node of document.querySelectorAll(`.${TURN_BUTTON_CLASS}, .gptx-turn-sep`)) {
+    node.remove();
   }
 }
