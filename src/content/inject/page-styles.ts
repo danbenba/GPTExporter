@@ -66,11 +66,11 @@ function css(provider: Provider): string {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 6px 10px;
+  gap: ${isClaude ? '8px' : '6px'};
+  height: ${isClaude ? '32px' : '36px'};
+  padding: ${isClaude ? '6px 10px' : '6px 32px 6px 10px'};
   border: 0;
-  border-radius: 8px;
+  border-radius: ${isClaude ? '8px' : '10px'};
   background: transparent;
   color: inherit;
   font-family: inherit;
@@ -78,13 +78,10 @@ function css(provider: Provider): string {
   text-align: start;
   cursor: pointer;
 }
-.gptx-menu-item-gptx:hover { background: rgba(255,255,255,.1); }
-.gptx-menu-item-gptx svg { width: 16px; height: 16px; flex: none; display: block; }
-.gptx-menu-sep {
-  height: 1px;
-  margin: 4px 6px;
-  background: ${isClaude ? 'rgba(255,255,255,.1)' : 'var(--border-light, rgba(255,255,255,.1))'};
+.gptx-menu-item-gptx:hover {
+  background: ${isClaude ? 'rgba(255,255,255,.1)' : 'var(--interactive-bg-secondary-hover, rgba(255,255,255,.1))'};
 }
+.gptx-menu-item-gptx svg { width: 16px; height: 16px; flex: none; display: block; }
 `;
 }
 

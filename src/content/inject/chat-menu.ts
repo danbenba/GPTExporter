@@ -43,11 +43,8 @@ export function mountChatMenuItem(
 
     ensurePageStyles(provider);
 
-    const container = items[items.length - 1].parentElement ?? menu;
-
-    const separator = document.createElement('div');
-    separator.className = 'gptx-menu-sep';
-    separator.setAttribute('aria-hidden', 'true');
+    const lastItem = items[items.length - 1];
+    const container = lastItem.parentElement ?? menu;
 
     const item = document.createElement('button');
     item.className = MENU_ITEM_CLASS;
@@ -60,6 +57,7 @@ export function mountChatMenuItem(
       onSelect(conversationId);
     });
 
-    container.append(separator, item);
+    lastItem.after(item);
+    void container;
   }
 }
