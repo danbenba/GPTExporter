@@ -110,7 +110,9 @@ function blockToNormalized(
       const detail = block.hidden || block.thinking_hidden ? '' : (block.thinking ?? '').trim();
 
       if (!detail && !summary) return [];
-      return [{ kind: 'thought', text: detail || summary, title: summary || undefined }];
+      const text = detail || summary;
+      const title = summary && summary !== text ? summary : undefined;
+      return [{ kind: 'thought', text, title }];
     }
     case 'tool_use': {
       if (block.name && ARTIFACT_TOOLS.has(block.name)) {
