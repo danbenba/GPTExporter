@@ -1,11 +1,15 @@
-import type { ApiConversation, ConversationMessage } from '@/core/model/conversation';
+import type {
+  ApiConversation,
+  ConversationMessage,
+  ConversationNode,
+} from '@/core/model/conversation';
 
 export function walkActiveBranch(conversation: ApiConversation): ConversationMessage[] {
   const ordered: ConversationMessage[] = [];
   let cursor: string | null | undefined = conversation.current_node;
 
   while (cursor) {
-    const node = conversation.mapping[cursor];
+    const node: ConversationNode | undefined = conversation.mapping[cursor];
     if (!node) break;
     if (node.message) {
       ordered.push(node.message);
