@@ -56,7 +56,7 @@ export class ExportModal {
     if (this.host) this.destroy();
     this.request = request;
     this.toClipboard = false;
-    this.includeUserTurn = false;
+    this.includeUserTurn = true;
     this.previewThread = null;
     this.previewUserRow = null;
     this.conditionalRows.clear();
@@ -294,9 +294,9 @@ export class ExportModal {
       (turn.userMessageIndex !== null && turn.userMessageIndex >= 0);
     if (turn.role === 'assistant' && hasPrompt) {
       const withUser = document.createElement('button');
-      withUser.className = 'gptx-chip';
+      withUser.className = 'gptx-chip selected';
       withUser.textContent = t('withUserMessage');
-      withUser.setAttribute('aria-pressed', 'false');
+      withUser.setAttribute('aria-pressed', 'true');
       withUser.addEventListener('click', () => {
         this.includeUserTurn = !this.includeUserTurn;
         withUser.classList.toggle('selected', this.includeUserTurn);
