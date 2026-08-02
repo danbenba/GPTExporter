@@ -246,10 +246,26 @@ details.thought {
   font-size: 14.5px;
 }
 details.thought summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
   color: var(--text-tertiary);
   font-weight: 500;
+  list-style: none;
 }
+details.thought summary::-webkit-details-marker { display: none; }
+details.thought summary svg { width: 15px; height: 15px; flex: none; }
+.thought-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  margin: 0 0 12px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+.thought-line svg { width: 15px; height: 15px; flex: none; }
 .sources {
   border-top: 1px solid var(--border-light);
   margin-top: 12px;
