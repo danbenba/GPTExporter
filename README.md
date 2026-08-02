@@ -22,9 +22,14 @@ Extension Chrome (Manifest V3) pour exporter vos conversations **ChatGPT** et **
 | Site | Récupération | Design appliqué |
 |---|---|---|
 | chatgpt.com | `/backend-api/conversation/{id}` (arbre `mapping`) | Palette et composants ChatGPT, toast descendant |
-| claude.ai | `/api/organizations/{org}/chat_conversations/{uuid}?tree=True&rendering_mode=messages&render_all_tools=true` | Palette Anthropic (clay `#d97757`), toast glissant |
+| claude.ai `/chat/{uuid}` | `/api/organizations/{org}/chat_conversations/{uuid}?tree=True&rendering_mode=messages&render_all_tools=true` | Palette Anthropic (clay `#d97757`), toast glissant |
+| claude.ai `/cowork/{cse_…}` et `/code/{session_…}` | `/v1/code/sessions/{id}` + `/v1/code/sessions/{id}/events` (pagination par curseur) | idem Claude |
 
-Sur Claude, l'extension reconstruit la branche active via `parent_message_uuid`, matérialise les **artifacts** (`create` / `update` / `rewrite`), fusionne `files` et `files_v2`, et dégrade progressivement les paramètres de requête si une conversation refuse de se charger.
+Sur Claude, l'extension reconstruit la branche active via `parent_message_uuid`, matérialise les **artifacts** (`create` / `update` / `rewrite`), fusionne `files` et `files_v2`, et conserve les résumés de raisonnement même lorsque le corps est masqué par l'API.
+
+Les sessions **Cowork** et **Claude Code** utilisent un tout autre format (journal d'événements plat au lieu d'un arbre de messages) : l'identifiant est normalisé en `cse_…`, l'organisation passe par l'en-tête `x-organization-uuid`, et les événements sont paginés puis filtrés (les sous-agents, les flux de streaming et les événements de contrôle sont écartés).
+
+Si une conversation refuse de se charger — typiquement celles utilisant la recherche avancée, dont la charge utile peut peser plusieurs dizaines de mégaoctets — l'extension **dégrade progressivement** sa requête (lecture éventuelle → sans `render_all_tools` → sans arbre) avec un délai maximum de 60 s par tentative, puis se rabat sur l'instantané `/latest`.
 
 ## Installation (développement)
 
