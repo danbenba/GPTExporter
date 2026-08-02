@@ -57,6 +57,8 @@ export class ExportModal {
     this.request = request;
     this.toClipboard = false;
     this.includeUserTurn = false;
+    this.previewThread = null;
+    this.previewUserRow = null;
     this.conditionalRows.clear();
     this.closeMenus = [];
     this.options = await loadOptions();
@@ -230,6 +232,26 @@ export class ExportModal {
     ];
   }
 
+  private previewThread: HTMLElement | null = null;
+  private previewUserRow: HTMLElement | null = null;
+
+  private refreshPreviewFade(): void {
+    const thread = this.previewThread;
+    if (!thread) return;
+    setTimeout(() => {
+      thread.classList.toggle('short', thread.scrollHeight <= thread.clientHeight + 1);
+    }, 0);
+  }
+
+  private syncPreviewSelection(): void {
+    const turn = this.request?.turn;
+    if (!this.previewUserRow || !turn) return;
+    const showUser = turn.role === 'user' || this.includeUserTurn;
+    this.previewUserRow.style.display = showUser ? '' : 'none';
+    this.previewUserRow.classList.toggle('muted', !showUser);
+    this.refreshPreviewFade();
+  }
+
   private buildPreview(): HTMLElement {
     const turn = this.request!.turn!;
     const card = document.createElement('div');
@@ -237,6 +259,7 @@ export class ExportModal {
 
     const thread = document.createElement('div');
     thread.className = 'gptx-preview-thread';
+    this.previewThread = thread;
 
     if (turn.userPreview) {
       const user = document.createElement('div');
@@ -246,6 +269,7 @@ export class ExportModal {
       bubble.textContent = turn.userPreview;
       user.appendChild(bubble);
       thread.appendChild(user);
+      this.previewUserRow = user;
     }
 
     if (turn.assistantPreview) {
@@ -256,9 +280,7 @@ export class ExportModal {
     }
 
     card.appendChild(thread);
-    setTimeout(() => {
-      if (thread.scrollHeight <= thread.clientHeight + 1) thread.classList.add('short');
-    }, 0);
+    this.syncPreviewSelection();
     return card;
   }
 
@@ -276,6 +298,7 @@ export class ExportModal {
         this.includeUserTurn = !this.includeUserTurn;
         withUser.classList.toggle('selected', this.includeUserTurn);
         withUser.setAttribute('aria-pressed', String(this.includeUserTurn));
+        this.syncPreviewSelection();
       });
       row.appendChild(withUser);
     }
