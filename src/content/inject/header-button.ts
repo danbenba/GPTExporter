@@ -7,7 +7,10 @@ const BUTTON_ID = 'gptx-header-export';
 
 export function mountHeaderButton(provider: Provider, onClick: () => void): void {
   if (document.getElementById(BUTTON_ID)) return;
-  const anchor = document.querySelector(provider.selectors.headerAnchor);
+  const anchor =
+    document.querySelector(provider.selectors.headerAnchor) ??
+    provider.resolveHeaderAnchor?.() ??
+    null;
   if (!anchor) return;
 
   ensurePageStyles(provider);
@@ -34,7 +37,11 @@ export function mountHeaderButton(provider: Provider, onClick: () => void): void
   }
 
   if (provider.id === 'claude') {
-    anchor.parentElement?.insertBefore(button, anchor);
+    if (anchor.tagName === 'BUTTON') {
+      anchor.parentElement?.insertBefore(button, anchor);
+    } else {
+      anchor.insertBefore(button, anchor.firstChild);
+    }
     return;
   }
   anchor.insertBefore(button, anchor.firstChild);
