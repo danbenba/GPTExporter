@@ -1,6 +1,7 @@
 import { buildFilename } from '@/core/export/filename';
 import { formatDateTime, modelDisplayName, roleLabel } from '@/core/export/render-utils';
 import type { ExportArtifact, ExportInput, Exporter } from '@/core/export/types';
+import { EXPORT_CREDIT_TEXT, EXPORT_CREDIT_URL } from '@/shared/constants';
 import { messages, type Locale } from '@/i18n/messages';
 
 export const textExporter: Exporter = {
@@ -28,6 +29,8 @@ export const textExporter: Exporter = {
           lines.push(`[${dict.image}]`);
         } else if (block.kind === 'thought') {
           lines.push(`[${dict.reasoning}] ${block.text}`);
+        } else if (block.kind === 'writing') {
+          lines.push(`« ${block.text} »`);
         } else {
           lines.push(block.text);
         }
@@ -41,7 +44,7 @@ export const textExporter: Exporter = {
       lines.push('', '----------------------------------------', '');
     }
 
-    lines.push(dict.exportedWith);
+    lines.push(`${EXPORT_CREDIT_TEXT} — ${EXPORT_CREDIT_URL}`);
 
     return {
       kind: 'download',

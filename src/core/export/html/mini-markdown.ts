@@ -1,3 +1,15 @@
+import { highlightCode } from './highlight';
+
+let copyLabel = 'Copy';
+
+export function setCopyLabel(label: string): void {
+  copyLabel = label;
+}
+
+export function codeBlockHtml(code: string, language = ''): string {
+  return `<pre class="codeblock"><div class="codeblock-head"><span>${escapeHtml(language)}</span><button class="copy-btn" type="button" data-copy>${escapeHtml(copyLabel)}</button></div><code>${highlightCode(code, language)}</code></pre>`;
+}
+
 export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -68,9 +80,7 @@ export function renderMarkdown(source: string): string {
   for (const line of lines) {
     if (inFence) {
       if (/^\s*```/.test(line)) {
-        out.push(
-          `<pre class="codeblock"><div class="codeblock-head">${escapeHtml(fenceLang)}</div><code>${escapeHtml(fenceLines.join('\n'))}</code></pre>`,
-        );
+        out.push(codeBlockHtml(fenceLines.join('\n'), fenceLang));
         inFence = false;
         fenceLines = [];
         fenceLang = '';
@@ -145,7 +155,7 @@ export function renderMarkdown(source: string): string {
   }
 
   if (inFence) {
-    out.push(`<pre class="codeblock"><code>${escapeHtml(fenceLines.join('\n'))}</code></pre>`);
+    out.push(codeBlockHtml(fenceLines.join('\n'), fenceLang));
   }
   flushParagraph();
   flushList(listItems, listOrdered, out);

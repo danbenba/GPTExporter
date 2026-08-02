@@ -13,6 +13,9 @@ export const RUNTIME_MESSAGES = {
   getPageStatus: 'gptx/get-page-status',
 } as const;
 
+export const EXPORT_CREDIT_TEXT = 'Exported by GPT Exporter';
+export const EXPORT_CREDIT_URL = 'https://danbenba.dev';
+
 export const URL_POLL_INTERVAL_MS = 400;
 export const DOM_RETRY_INTERVAL_MS = 500;
 export const SESSION_TOKEN_SAFETY_WINDOW_MS = 60_000;

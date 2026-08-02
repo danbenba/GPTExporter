@@ -6,7 +6,9 @@ export interface HtmlPageInput {
   lang: string;
   metaRows: Array<[string, string]>;
   body: string;
-  footer: string;
+  creditText: string;
+  creditUrl: string;
+  copiedLabel: string;
 }
 
 export function renderHtmlPage(input: HtmlPageInput): string {
@@ -32,8 +34,23 @@ ${meta}
 <main>
 ${input.body}
 </main>
-<footer class="credits">${escapeHtml(input.footer)}</footer>
+<footer class="credits">${escapeHtml(input.creditText)} — <a href="${escapeHtml(input.creditUrl)}" target="_blank" rel="noopener">${escapeHtml(input.creditUrl.replace(/^https?:\/\//, ''))}</a></footer>
 </div>
+<script>
+var COPIED_LABEL = ${JSON.stringify(input.copiedLabel)};
+document.addEventListener('click', function (event) {
+  var button = event.target.closest('[data-copy]');
+  if (!button) return;
+  var container = button.closest('pre, .writing-card');
+  var source = container ? container.querySelector('code, .writing-body') : null;
+  if (!source) return;
+  navigator.clipboard.writeText(source.innerText).then(function () {
+    var previous = button.textContent;
+    button.textContent = COPIED_LABEL;
+    setTimeout(function () { button.textContent = previous; }, 1500);
+  });
+});
+</script>
 </body>
 </html>`;
 }

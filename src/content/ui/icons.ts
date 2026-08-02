@@ -17,6 +17,10 @@ export const checkIconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://
 <path d="M4.5 12.5L9.5 17.5L19.5 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
+export const chevronIconSvg = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
 export const markdownIconSvg = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect x="1.75" y="4.25" width="16.5" height="11.5" rx="2" stroke="currentColor" stroke-width="1.4"/>
 <path d="M4.5 12.5V7.5L7 10L9.5 7.5V12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>

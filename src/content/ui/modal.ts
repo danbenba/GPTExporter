@@ -4,7 +4,7 @@ import { EXPORT_FORMATS, type ExportFormat, type ExportOptions } from '@/core/mo
 import { t } from '@/i18n';
 import { isDarkTheme } from '@/content/dom/observe';
 import { loadOptions, saveOptions } from '@/content/options-store';
-import { checkIconSvg, closeIconSvg, formatIcons } from './icons';
+import { checkIconSvg, chevronIconSvg, closeIconSvg, formatIcons } from './icons';
 import { shadowStyles } from './styles';
 
 interface ToggleDefinition {
@@ -106,44 +106,48 @@ export class ExportModal {
     formatLabel.textContent = t('format');
     body.appendChild(formatLabel);
 
-    const formats = document.createElement('div');
-    formats.className = 'gptx-formats';
-    body.appendChild(formats);
-    const formatButtons = new Map<ExportFormat, HTMLButtonElement>();
-    for (const format of EXPORT_FORMATS) {
-      const button = document.createElement('button');
-      button.className = 'gptx-format';
-      button.innerHTML = `${formatIcons[format.id]}<span>${t(FORMAT_LABEL_KEYS[format.id])}</span>`;
-      button.addEventListener('click', () => {
-        options.format = format.id;
-        for (const [id, el] of formatButtons) {
-          el.classList.toggle('selected', id === format.id);
-        }
-        this.refreshConditionalRows();
-      });
-      formatButtons.set(format.id, button);
-      formats.appendChild(button);
-    }
-    formatButtons.get(options.format)?.classList.add('selected');
+    body.appendChild(this.buildFormatSelect());
 
     const contentLabel = document.createElement('div');
     contentLabel.className = 'gptx-section-label';
     contentLabel.textContent = t('content');
     body.appendChild(contentLabel);
 
-    const toggles: ToggleDefinition[] = [
+    const basicToggles: ToggleDefinition[] = [
+      { key: 'includeCitations', label: t('includeCitations'), hint: t('includeCitationsHint') },
+      { key: 'includeTimestamps', label: t('includeTimestamps'), hint: t('includeTimestampsHint') },
+    ];
+    for (const definition of basicToggles) {
+      body.appendChild(this.buildToggleRow(definition));
+    }
+
+    const disclosure = document.createElement('button');
+    disclosure.className = 'gptx-disclosure';
+    disclosure.setAttribute('aria-expanded', 'false');
+    disclosure.innerHTML = `<span class="chev">${chevronIconSvg}</span><span>${t('advancedOptions')}</span>`;
+    body.appendChild(disclosure);
+
+    const advanced = document.createElement('div');
+    advanced.className = 'gptx-adv';
+    body.appendChild(advanced);
+
+    const advancedToggles: ToggleDefinition[] = [
       { key: 'includeUserMessages', label: t('includeUserMessages'), hint: t('includeUserMessagesHint') },
       { key: 'includeAssistantMessages', label: t('includeAssistantMessages'), hint: t('includeAssistantMessagesHint') },
       { key: 'includeThoughts', label: t('includeThoughts'), hint: t('includeThoughtsHint') },
       { key: 'includeToolBlocks', label: t('includeToolBlocks'), hint: t('includeToolBlocksHint') },
-      { key: 'includeCitations', label: t('includeCitations'), hint: t('includeCitationsHint') },
-      { key: 'includeTimestamps', label: t('includeTimestamps'), hint: t('includeTimestampsHint') },
       { key: 'includeMetadataHeader', label: t('includeMetadataHeader'), hint: t('includeMetadataHeaderHint') },
       { key: 'embedImages', label: t('embedImages'), hint: t('embedImagesHint') },
     ];
-    for (const definition of toggles) {
-      body.appendChild(this.buildToggleRow(definition));
+    for (const definition of advancedToggles) {
+      advanced.appendChild(this.buildToggleRow(definition));
     }
+
+    disclosure.addEventListener('click', () => {
+      const open = disclosure.getAttribute('aria-expanded') === 'true';
+      disclosure.setAttribute('aria-expanded', String(!open));
+      advanced.classList.toggle('open', !open);
+    });
 
     const scopeLabel = document.createElement('div');
     scopeLabel.className = 'gptx-section-label';
@@ -215,6 +219,63 @@ export class ExportModal {
   }
 
   private conditionalRows = new Map<string, HTMLElement>();
+
+  private buildFormatSelect(): HTMLElement {
+    const options = this.options!;
+    const wrap = document.createElement('div');
+    wrap.className = 'gptx-select-wrap';
+
+    const trigger = document.createElement('button');
+    trigger.className = 'gptx-select';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const menu = document.createElement('div');
+    menu.className = 'gptx-menu';
+    menu.setAttribute('role', 'listbox');
+
+    const labelFor = (format: ExportFormat) => t(FORMAT_LABEL_KEYS[format]);
+    const syncTrigger = () => {
+      trigger.innerHTML = `<span class="fmt-icon">${formatIcons[options.format]}</span><span>${labelFor(options.format)}</span><span class="chev">${chevronIconSvg}</span>`;
+      trigger.querySelector('.fmt-icon svg')?.classList.add('fmt');
+    };
+
+    const items = new Map<ExportFormat, HTMLButtonElement>();
+    for (const format of EXPORT_FORMATS) {
+      const item = document.createElement('button');
+      item.className = 'gptx-menu-item';
+      item.setAttribute('role', 'option');
+      item.innerHTML = `<span class="fmt-icon">${formatIcons[format.id]}</span><span>${labelFor(format.id)}</span><span class="tick">${checkIconSvg}</span>`;
+      item.querySelector('.fmt-icon svg')?.classList.add('fmt');
+      item.addEventListener('click', () => {
+        options.format = format.id;
+        for (const [id, el] of items) el.classList.toggle('selected', id === format.id);
+        syncTrigger();
+        closeMenu();
+        this.refreshConditionalRows();
+      });
+      items.set(format.id, item);
+      menu.appendChild(item);
+    }
+    items.get(options.format)?.classList.add('selected');
+
+    const closeMenu = () => {
+      trigger.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('open');
+    };
+    trigger.addEventListener('click', () => {
+      const open = trigger.getAttribute('aria-expanded') === 'true';
+      trigger.setAttribute('aria-expanded', String(!open));
+      menu.classList.toggle('open', !open);
+    });
+    this.root?.addEventListener('click', (event) => {
+      if (!wrap.contains(event.target as Node)) closeMenu();
+    });
+
+    syncTrigger();
+    wrap.append(trigger, menu);
+    return wrap;
+  }
 
   private buildToggleRow(definition: ToggleDefinition): HTMLElement {
     const options = this.options!;

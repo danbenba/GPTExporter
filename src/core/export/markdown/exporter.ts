@@ -2,6 +2,7 @@ import { buildFilename } from '@/core/export/filename';
 import { formatDateTime, modelDisplayName, roleLabel } from '@/core/export/render-utils';
 import type { ExportArtifact, ExportInput, Exporter } from '@/core/export/types';
 import type { NormalizedBlock } from '@/core/model/normalized';
+import { EXPORT_CREDIT_TEXT, EXPORT_CREDIT_URL } from '@/shared/constants';
 import { messages, type Locale } from '@/i18n/messages';
 
 function blockToMarkdown(block: NormalizedBlock, assets: Record<string, string>, locale: Locale): string {
@@ -22,6 +23,11 @@ function blockToMarkdown(block: NormalizedBlock, assets: Record<string, string>,
       const src = block.assetPointer ? assets[block.assetPointer] : undefined;
       return src ? `![${dict.image}](${src})` : `*[${dict.image}]*`;
     }
+    case 'writing':
+      return `> ✏️ **${dict.writingLabel}**\n>\n${block.text
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n')}`;
     case 'thought':
       return `> *${dict.reasoning}* : ${block.text.replace(/\n/g, '\n> ')}`;
     case 'error':
@@ -71,7 +77,7 @@ export const markdownExporter: Exporter = {
       }
     }
 
-    lines.push('---', '', `*${dict.exportedWith}*`);
+    lines.push('---', '', `*${EXPORT_CREDIT_TEXT} — [danbenba.dev](${EXPORT_CREDIT_URL})*`);
 
     return {
       kind: 'download',

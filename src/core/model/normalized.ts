@@ -6,7 +6,8 @@ export type BlockKind =
   | 'image'
   | 'thought'
   | 'error'
-  | 'context';
+  | 'context'
+  | 'writing';
 
 export interface NormalizedBlock {
   kind: BlockKind;
