@@ -1,5 +1,5 @@
 import { escapeHtml } from './mini-markdown';
-import { pageStyles } from './page-styles';
+import { buildPageStyles, chatgptSkin, claudeSkin } from './page-styles';
 
 export interface HtmlPageInput {
   title: string;
@@ -9,6 +9,7 @@ export interface HtmlPageInput {
   creditText: string;
   creditUrl: string;
   copiedLabel: string;
+  source?: string;
 }
 
 export function renderHtmlPage(input: HtmlPageInput): string {
@@ -21,7 +22,7 @@ export function renderHtmlPage(input: HtmlPageInput): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(input.title)}</title>
-<style>${pageStyles}</style>
+<style>${buildPageStyles(input.source === 'claude' ? claudeSkin : chatgptSkin)}</style>
 </head>
 <body>
 <div class="page">

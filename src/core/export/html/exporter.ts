@@ -113,6 +113,7 @@ export function buildConversationHtml(
     creditText: EXPORT_CREDIT_TEXT,
     creditUrl: EXPORT_CREDIT_URL,
     copiedLabel: dict.copied,
+    source: conversation.source,
   });
 }
 

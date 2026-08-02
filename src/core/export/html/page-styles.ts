@@ -1,24 +1,78 @@
-export const pageStyles = `
+export interface PageSkin {
+  bg: string;
+  bgElevated: string;
+  surface: string;
+  bubble: string;
+  border: string;
+  borderLight: string;
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  accent: string;
+  codeBg: string;
+  fontFamily: string;
+  bubbleRadius: string;
+  cardRadius: string;
+}
+
+export const chatgptSkin: PageSkin = {
+  bg: '#000',
+  bgElevated: '#1b1b1b',
+  surface: '#212121',
+  bubble: '#303030',
+  border: '#ffffff26',
+  borderLight: '#ffffff0d',
+  text: '#fff',
+  textSecondary: '#cdcdcd',
+  textTertiary: '#9b9b9b',
+  accent: '#3a83f7',
+  codeBg: '#303030',
+  fontFamily: 'ui-sans-serif, -apple-system, system-ui, \"Segoe UI\", Helvetica, Arial, sans-serif',
+  bubbleRadius: '24px',
+  cardRadius: '24px',
+};
+
+export const claudeSkin: PageSkin = {
+  bg: '#20201f',
+  bgElevated: '#181817',
+  surface: '#2c2c2a',
+  bubble: '#131313',
+  border: 'rgba(255,255,255,.1)',
+  borderLight: 'rgba(255,255,255,.05)',
+  text: '#f9f9f7',
+  textSecondary: '#c3c2b7',
+  textTertiary: '#97958d',
+  accent: '#d97757',
+  codeBg: '#181817',
+  fontFamily: '\"Anthropic Sans\", system-ui, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif',
+  bubbleRadius: '12px',
+  cardRadius: '12px',
+};
+
+export const buildPageStyles = (skin: PageSkin) => `
 :root {
   color-scheme: dark;
-  --bg: #000;
-  --bg-elevated: #1b1b1b;
-  --surface: #212121;
-  --bubble: #303030;
-  --border: #ffffff26;
-  --border-light: #ffffff0d;
-  --text: #fff;
-  --text-secondary: #cdcdcd;
-  --text-tertiary: #9b9b9b;
-  --accent: #3a83f7;
-  --code-bg: #303030;
+  --bg: ${skin.bg};
+  --bg-elevated: ${skin.bgElevated};
+  --surface: ${skin.surface};
+  --bubble: ${skin.bubble};
+  --border: ${skin.border};
+  --border-light: ${skin.borderLight};
+  --text: ${skin.text};
+  --text-secondary: ${skin.textSecondary};
+  --text-tertiary: ${skin.textTertiary};
+  --accent: ${skin.accent};
+  --code-bg: ${skin.codeBg};
+  --font: ${skin.fontFamily};
+  --bubble-radius: ${skin.bubbleRadius};
+  --card-radius: ${skin.cardRadius};
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: var(--font);
   font-size: 16px;
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
@@ -55,7 +109,7 @@ header.meta .meta-grid a { color: var(--text-secondary); }
 }
 .turn-user .bubble {
   background: var(--bubble);
-  border-radius: 24px;
+  border-radius: var(--bubble-radius);
   padding: 10px 20px;
   max-width: 75%;
   white-space: pre-wrap;
@@ -71,7 +125,7 @@ header.meta .meta-grid a { color: var(--text-secondary); }
 .writing-card {
   background: var(--code-bg);
   border: 1px solid var(--border-light);
-  border-radius: 24px;
+  border-radius: var(--card-radius);
   margin: 16px 0 4px;
   overflow: hidden;
 }
@@ -103,7 +157,7 @@ header.meta .meta-grid a { color: var(--text-secondary); }
   border-radius: 9999px;
   background: transparent;
   color: var(--text);
-  font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: var(--font);
   font-size: 13px;
   font-weight: 400;
   cursor: pointer;
@@ -140,7 +194,7 @@ code {
 pre.codeblock {
   background: var(--code-bg);
   border: 1px solid var(--border-light);
-  border-radius: 24px;
+  border-radius: var(--card-radius);
   margin: 16px 0 4px;
   overflow: hidden;
 }
@@ -153,7 +207,7 @@ pre.codeblock .codeblock-head {
   background: var(--code-bg);
   color: var(--text);
   font-size: 14px;
-  font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: var(--font);
   padding: 6px 6px 6px 20px;
 }
 pre.codeblock code {
