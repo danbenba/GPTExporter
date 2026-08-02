@@ -34,7 +34,7 @@ ${meta}
 <main>
 ${input.body}
 </main>
-<footer class="credits">${escapeHtml(input.creditText)} — <a href="${escapeHtml(input.creditUrl)}" target="_blank" rel="noopener">${escapeHtml(input.creditUrl.replace(/^https?:\/\//, ''))}</a></footer>
+<footer class="credits">${escapeHtml(input.creditText)}<a href="${escapeHtml(input.creditUrl)}" target="_blank" rel="noopener">${escapeHtml(input.creditUrl.replace(/^https?:\/\//, ''))}</a></footer>
 </div>
 <script>
 var COPIED_LABEL = ${JSON.stringify(input.copiedLabel)};
