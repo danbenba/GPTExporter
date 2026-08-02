@@ -10,6 +10,8 @@ import { renderHtmlPage } from './template';
 
 const BRAIN_ICON = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4.167a2.083 2.083 0 0 0-3.958-.917 2.083 2.083 0 0 0-1.875 3.125 2.083 2.083 0 0 0 0 3.75 2.083 2.083 0 0 0 1.875 3.125A2.083 2.083 0 0 0 10 15.833V4.167Z"/><path d="M10 4.167a2.083 2.083 0 0 1 3.958-.917 2.083 2.083 0 0 1 1.875 3.125 2.083 2.083 0 0 1 0 3.75 2.083 2.083 0 0 1-1.875 3.125A2.083 2.083 0 0 1 10 15.833V4.167Z"/></svg>`;
 
+const CHEVRON_ICON = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"><path d="M5.417 7.917 10 12.5l4.583-4.583"/></svg>`;
+
 const PENCIL_ICON =`<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"><path d="M13.75 3.542a1.77 1.77 0 0 1 2.5 2.5l-8.75 8.75-3.333.833.833-3.333 8.75-8.75Z"/></svg>`;
 
 function blockToHtml(block: NormalizedBlock, assets: AssetMap, locale: Locale): string {
@@ -34,12 +36,8 @@ function blockToHtml(block: NormalizedBlock, assets: AssetMap, locale: Locale): 
         : `<p><em>[${dict.image}]</em></p>`;
     }
     case 'thought': {
-      const label = block.title ? escapeHtml(block.title) : dict.reasoning;
-      const isSummaryOnly = !block.title && block.text.length < 160 && !block.text.includes('\n');
-      if (isSummaryOnly) {
-        return `<div class="thought-line">${BRAIN_ICON}<span>${escapeHtml(block.text)}</span></div>`;
-      }
-      return `<details class="thought"><summary>${BRAIN_ICON}<span>${label}</span></summary>${renderMarkdown(block.text)}</details>`;
+      const label = escapeHtml(block.title ?? dict.reasoning);
+      return `<details class="thought"><summary>${BRAIN_ICON}<span class="thought-label">${label}</span><span class="thought-chevron">${CHEVRON_ICON}</span></summary><div class="thought-body">${renderMarkdown(block.text)}</div></details>`;
     }
     case 'error':
       return `<blockquote>⚠️ ${block.title ? `<strong>${escapeHtml(block.title)}</strong> — ` : ''}${escapeHtml(block.text)}</blockquote>`;
