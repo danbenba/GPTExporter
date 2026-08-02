@@ -23,10 +23,34 @@ export function formatDateTime(epochSeconds: number | undefined, locale: Locale)
   });
 }
 
+const CLAUDE_FAMILIES: Record<string, string> = {
+  opus: 'Opus',
+  sonnet: 'Sonnet',
+  haiku: 'Haiku',
+  fable: 'Fable',
+  mythos: 'Mythos',
+};
+
+function claudeDisplayName(slug: string): string | null {
+  if (!slug.startsWith('claude')) return null;
+  const familyKey = Object.keys(CLAUDE_FAMILIES).find((family) => slug.includes(family));
+  if (!familyKey) return 'Claude';
+  const family = CLAUDE_FAMILIES[familyKey];
+  const version = slug
+    .replace(/[-_]\d{8}$/, '')
+    .split(/[-_]/)
+    .filter((part) => /^\d{1,2}$/.test(part))
+    .join('.');
+  return version ? `Claude ${family} ${version}` : `Claude ${family}`;
+}
+
 export function modelDisplayName(slug: string | undefined): string {
   if (!slug) return '';
 
   const normalizedSlug = slug.toLowerCase().trim();
+
+  const claudeName = claudeDisplayName(normalizedSlug);
+  if (claudeName) return claudeName;
 
   const known: Record<string, string> = {
     'gpt-5-6': 'GPT-5.6',
