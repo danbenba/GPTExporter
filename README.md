@@ -1,6 +1,6 @@
 # GPT Exporter
 
-Extension Chrome (Manifest V3) pour exporter vos conversations **ChatGPT** et **Claude** en **Markdown**, **HTML**, **JSON**, **TXT** ou **PDF**, avec une interface intégrée au design natif de chaque site (thème OLED inclus).
+Extension Chrome (Manifest V3) pour exporter vos conversations **ChatGPT**, **Claude**, **Grok**, **Gemini** et **Perplexity** en **Markdown**, **HTML**, **JSON**, **TXT** ou **PDF**, avec une interface intégrée au design natif de chaque site (thème OLED inclus).
 
 ![icon](public/icons/icon-128.png)
 
@@ -24,6 +24,9 @@ Extension Chrome (Manifest V3) pour exporter vos conversations **ChatGPT** et **
 | chatgpt.com | `/backend-api/conversation/{id}` (arbre `mapping`) | Palette et composants ChatGPT, toast descendant |
 | claude.ai `/chat/{uuid}` | `/api/organizations/{org}/chat_conversations/{uuid}?tree=True&rendering_mode=messages&render_all_tools=true` | Palette Anthropic (clay `#d97757`), toast glissant |
 | claude.ai `/cowork/{cse_…}` et `/code/{session_…}` | `/v1/code/sessions/{id}` + `/v1/code/sessions/{id}/events` (pagination par curseur) | idem Claude |
+| grok.com | `/rest/app-chat/conversations/{id}` + `/responses` + `POST /load-responses` | Palette Grok (`#141414`, bouton blanc), toast latéral |
+| gemini.google.com | RPC `hNvQHb` via `batchexecute` (jetons `SNlM0e` / `cfb2h` / `FdrFJe`) | Material 3, bulle 40px, accent `#a8c7fa` |
+| perplexity.ai | `/rest/thread/{id}?with_schematized_response=true` (blocs + curseur) | Palette Perplexity, accent teal `#4e99a3` |
 
 Sur Claude, l'extension reconstruit la branche active via `parent_message_uuid`, matérialise les **artifacts** (`create` / `update` / `rewrite`), fusionne `files` et `files_v2`, et conserve les résumés de raisonnement même lorsque le corps est masqué par l'API.
 
