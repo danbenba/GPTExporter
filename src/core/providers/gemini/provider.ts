@@ -25,7 +25,8 @@ export const geminiProvider: Provider = {
   theme: geminiTheme,
   selectors: {
     headerAnchor: '.gem-conversation-actions-menu-button',
-    turnActionButton: 'button[aria-label="Copier le prompt"], button[aria-label="Copy prompt"]',
+    turnActionButton:
+      'button[aria-label="Copier le prompt"], button[aria-label="Copy prompt"], button[aria-label="Copier"], button[aria-label="Copy"]',
     conversationTurn: '.conversation-container',
     messageIdAttribute: 'data-turn-id',
     messageRoleAttribute: 'data-role',
