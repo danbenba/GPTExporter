@@ -1,10 +1,21 @@
 import type { Provider } from '../types';
 import { fetchClaudeConversation, resolveClaudeAsset } from './api';
 import { normalizeClaudeConversation } from './normalize';
+import {
+  fetchSessionEvents,
+  fetchSessionMeta,
+  normalizeSession,
+  sessionIdFromPath,
+  SESSION_ID_PATTERN,
+} from './sessions';
 import { claudeTheme } from './theme';
 
 const PATH_PATTERN =
   /\/chat\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+
+function isSessionId(id: string): boolean {
+  return SESSION_ID_PATTERN.test(id);
+}
 
 export const claudeProvider: Provider = {
   id: 'claude',
@@ -46,12 +57,28 @@ export const claudeProvider: Provider = {
     return this.origins.some((origin) => url.startsWith(origin));
   },
   getConversationId(pathname = location.pathname) {
-    return pathname.match(PATH_PATTERN)?.[1] ?? null;
+    return pathname.match(PATH_PATTERN)?.[1] ?? sessionIdFromPath(pathname);
   },
   conversationUrl(conversationId) {
+    if (isSessionId(conversationId)) {
+      return `${location.origin}${location.pathname}`;
+    }
     return `${location.origin}/chat/${conversationId}`;
   },
   async fetchConversation(conversationId) {
+    if (isSessionId(conversationId)) {
+      const [meta, events] = await Promise.all([
+        fetchSessionMeta(conversationId),
+        fetchSessionEvents(conversationId),
+      ]);
+      const normalized = normalizeSession(
+        meta,
+        events,
+        this.conversationUrl(conversationId),
+        conversationId,
+      );
+      return { normalized, raw: { session: meta, events } };
+    }
     const raw = await fetchClaudeConversation(conversationId);
     const normalized = normalizeClaudeConversation(raw, this.conversationUrl(raw.uuid));
     return { normalized: { ...normalized, source: 'claude' }, raw };
