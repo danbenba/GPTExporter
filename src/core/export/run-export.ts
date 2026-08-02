@@ -13,12 +13,13 @@ export interface ExportRequest {
   conversationId: string;
   options: ExportOptions;
   messageId?: string | null;
+  extraMessageId?: string | null;
   toClipboard?: boolean;
   onPhase?: (phase: ExportPhase) => void;
 }
 
 export async function runExport(request: ExportRequest): Promise<string> {
-  const { conversationId, options, messageId, toClipboard, onPhase } = request;
+  const { conversationId, options, messageId, extraMessageId, toClipboard, onPhase } = request;
 
   onPhase?.('fetching');
   const raw = await fetchConversation(conversationId);
@@ -26,8 +27,11 @@ export async function runExport(request: ExportRequest): Promise<string> {
   let normalized = applyExportOptions(normalizeConversation(raw, url), options);
 
   if (messageId) {
-    const selected = normalized.messages.find((message) => message.id === messageId);
-    normalized = { ...normalized, messages: selected ? [selected] : [] };
+    const wanted = new Set([messageId, extraMessageId].filter(Boolean) as string[]);
+    normalized = {
+      ...normalized,
+      messages: normalized.messages.filter((message) => wanted.has(message.id)),
+    };
   }
 
   onPhase?.('assets');
