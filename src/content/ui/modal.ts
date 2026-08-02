@@ -3,14 +3,20 @@ import { runExport, type ExportPhase } from '@/core/export/run-export';
 import { EXPORT_FORMATS, type ExportFormat, type ExportOptions } from '@/core/model/export-options';
 import { t } from '@/i18n';
 import { isDarkTheme } from '@/content/dom/observe';
+import type { TurnLocation } from '@/content/dom/turn-index';
 import { loadOptions, saveOptions } from '@/content/options-store';
-import { checkIconSvg, chevronIconSvg, closeIconSvg, formatIcons } from './icons';
+import { checkIconSvg, chevronIconSvg, closeIconSvg, copyIconSvg, downloadIconSvg, formatIcons } from './icons';
 import { shadowStyles } from './styles';
 
 interface ToggleDefinition {
   key: keyof ExportOptions;
   label: string;
   hint: string;
+}
+
+export interface ModalRequest {
+  conversationId: string;
+  turn?: TurnLocation;
 }
 
 const FORMAT_LABEL_KEYS = {
@@ -25,27 +31,29 @@ export class ExportModal {
   private host: HTMLElement | null = null;
   private root: HTMLElement | null = null;
   private options: ExportOptions | null = null;
-  private conversationId = '';
+  private request: ModalRequest | null = null;
+  private toClipboard = false;
   private busy = false;
+  private conditionalRows = new Map<string, HTMLElement>();
+  private closeMenus: Array<() => void> = [];
   private keyHandler = (event: KeyboardEvent) => {
     if (event.key === 'Escape') this.close();
   };
 
-  async open(conversationId: string): Promise<void> {
+  async open(request: ModalRequest): Promise<void> {
     if (this.host) this.destroy();
-    this.conversationId = conversationId;
+    this.request = request;
+    this.toClipboard = false;
+    this.conditionalRows.clear();
+    this.closeMenus = [];
     this.options = await loadOptions();
     this.build();
     document.addEventListener('keydown', this.keyHandler, true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => this.root?.classList.add('open'));
-    });
+    setTimeout(() => this.root?.classList.add('open'), 20);
   }
 
   close(): void {
-    if (!this.root || this.busy) {
-      if (this.busy) return;
-    }
+    if (this.busy) return;
     this.root?.classList.add('closing');
     this.root?.classList.remove('open');
     setTimeout(() => this.destroy(), 180);
@@ -56,6 +64,10 @@ export class ExportModal {
     this.host?.remove();
     this.host = null;
     this.root = null;
+  }
+
+  private get isMessageMode(): boolean {
+    return Boolean(this.request?.turn);
   }
 
   private build(): void {
@@ -88,7 +100,7 @@ export class ExportModal {
     header.className = 'gptx-header';
     const title = document.createElement('div');
     title.className = 'gptx-title';
-    title.textContent = t('exportTitle');
+    title.textContent = this.isMessageMode ? t('exportMessageTitle') : t('exportTitle');
     const close = document.createElement('button');
     close.className = 'gptx-close';
     close.setAttribute('aria-label', t('cancel'));
@@ -101,23 +113,20 @@ export class ExportModal {
     body.className = 'gptx-body';
     modal.appendChild(body);
 
-    const formatLabel = document.createElement('div');
-    formatLabel.className = 'gptx-section-label';
-    formatLabel.textContent = t('format');
-    body.appendChild(formatLabel);
+    if (this.isMessageMode) {
+      body.appendChild(this.buildPreview());
+    }
 
+    body.appendChild(this.sectionLabel(t('format')));
     body.appendChild(this.buildFormatSelect());
 
-    const contentLabel = document.createElement('div');
-    contentLabel.className = 'gptx-section-label';
-    contentLabel.textContent = t('content');
-    body.appendChild(contentLabel);
+    if (this.isMessageMode) {
+      body.appendChild(this.sectionLabel(t('action')));
+      body.appendChild(this.buildActionChoice());
+    }
 
-    const basicToggles: ToggleDefinition[] = [
-      { key: 'includeCitations', label: t('includeCitations'), hint: t('includeCitationsHint') },
-      { key: 'includeTimestamps', label: t('includeTimestamps'), hint: t('includeTimestampsHint') },
-    ];
-    for (const definition of basicToggles) {
+    body.appendChild(this.sectionLabel(t('content')));
+    for (const definition of this.basicToggles()) {
       body.appendChild(this.buildToggleRow(definition));
     }
 
@@ -130,69 +139,18 @@ export class ExportModal {
     const advanced = document.createElement('div');
     advanced.className = 'gptx-adv';
     body.appendChild(advanced);
-
-    const advancedToggles: ToggleDefinition[] = [
-      { key: 'includeUserMessages', label: t('includeUserMessages'), hint: t('includeUserMessagesHint') },
-      { key: 'includeAssistantMessages', label: t('includeAssistantMessages'), hint: t('includeAssistantMessagesHint') },
-      { key: 'includeThoughts', label: t('includeThoughts'), hint: t('includeThoughtsHint') },
-      { key: 'includeToolBlocks', label: t('includeToolBlocks'), hint: t('includeToolBlocksHint') },
-      { key: 'includeMetadataHeader', label: t('includeMetadataHeader'), hint: t('includeMetadataHeaderHint') },
-      { key: 'embedImages', label: t('embedImages'), hint: t('embedImagesHint') },
-    ];
-    for (const definition of advancedToggles) {
+    for (const definition of this.advancedToggles()) {
       advanced.appendChild(this.buildToggleRow(definition));
     }
-
+    if (!this.isMessageMode) {
+      advanced.appendChild(this.sectionLabel(t('messageCount')));
+      advanced.appendChild(this.buildScope());
+    }
     disclosure.addEventListener('click', () => {
       const open = disclosure.getAttribute('aria-expanded') === 'true';
       disclosure.setAttribute('aria-expanded', String(!open));
       advanced.classList.toggle('open', !open);
     });
-
-    const scopeLabel = document.createElement('div');
-    scopeLabel.className = 'gptx-section-label';
-    scopeLabel.textContent = t('messageCount');
-    body.appendChild(scopeLabel);
-
-    const scope = document.createElement('div');
-    scope.className = 'gptx-scope';
-    body.appendChild(scope);
-
-    const allChip = document.createElement('button');
-    allChip.className = 'gptx-chip';
-    allChip.textContent = t('allMessages');
-    const lastChip = document.createElement('button');
-    lastChip.className = 'gptx-chip';
-    lastChip.textContent = t('lastN');
-    const count = document.createElement('input');
-    count.className = 'gptx-count';
-    count.type = 'number';
-    count.min = '1';
-    count.max = '999';
-    count.value = String(options.messageLimit ?? 10);
-    count.setAttribute('aria-label', t('lastNMessages'));
-
-    const syncScope = () => {
-      const limited = options.messageLimit !== null;
-      allChip.classList.toggle('selected', !limited);
-      lastChip.classList.toggle('selected', limited);
-      count.classList.toggle('visible', limited);
-    };
-    allChip.addEventListener('click', () => {
-      options.messageLimit = null;
-      syncScope();
-    });
-    lastChip.addEventListener('click', () => {
-      options.messageLimit = Math.max(1, Number(count.value) || 10);
-      syncScope();
-      count.focus();
-    });
-    count.addEventListener('input', () => {
-      const value = Math.max(1, Math.min(999, Number(count.value) || 1));
-      options.messageLimit = value;
-    });
-    scope.append(allChip, lastChip, count);
-    syncScope();
 
     const footer = document.createElement('div');
     footer.className = 'gptx-footer';
@@ -214,11 +172,151 @@ export class ExportModal {
 
     footer.append(cancel, submit);
 
+    void options;
     document.body.appendChild(this.host);
     this.refreshConditionalRows();
   }
 
-  private conditionalRows = new Map<string, HTMLElement>();
+  private sectionLabel(text: string): HTMLElement {
+    const label = document.createElement('div');
+    label.className = 'gptx-section-label';
+    label.textContent = text;
+    return label;
+  }
+
+  private basicToggles(): ToggleDefinition[] {
+    if (this.isMessageMode) {
+      return [
+        { key: 'includeCitations', label: t('includeCitations'), hint: t('includeCitationsHint') },
+        { key: 'includeMetadataHeader', label: t('includeMetadataHeader'), hint: t('includeMetadataHeaderHint') },
+      ];
+    }
+    return [
+      { key: 'includeCitations', label: t('includeCitations'), hint: t('includeCitationsHint') },
+      { key: 'includeTimestamps', label: t('includeTimestamps'), hint: t('includeTimestampsHint') },
+    ];
+  }
+
+  private advancedToggles(): ToggleDefinition[] {
+    const shared: ToggleDefinition[] = [
+      { key: 'includeThoughts', label: t('includeThoughts'), hint: t('includeThoughtsHint') },
+      { key: 'includeToolBlocks', label: t('includeToolBlocks'), hint: t('includeToolBlocksHint') },
+      { key: 'embedImages', label: t('embedImages'), hint: t('embedImagesHint') },
+    ];
+    if (this.isMessageMode) {
+      return [
+        { key: 'includeTimestamps', label: t('includeTimestamps'), hint: t('includeTimestampsHint') },
+        ...shared,
+      ];
+    }
+    return [
+      { key: 'includeUserMessages', label: t('includeUserMessages'), hint: t('includeUserMessagesHint') },
+      { key: 'includeAssistantMessages', label: t('includeAssistantMessages'), hint: t('includeAssistantMessagesHint') },
+      ...shared,
+      { key: 'includeMetadataHeader', label: t('includeMetadataHeader'), hint: t('includeMetadataHeaderHint') },
+    ];
+  }
+
+  private buildPreview(): HTMLElement {
+    const turn = this.request!.turn!;
+    const card = document.createElement('div');
+    card.className = 'gptx-preview';
+
+    const head = document.createElement('div');
+    head.className = 'gptx-preview-head';
+    head.textContent = `${t('messagePreview')} · ${turn.role === 'user' ? t('user') : t('assistant')}`;
+
+    const text = document.createElement('div');
+    text.className = 'gptx-preview-text';
+    text.textContent = turn.preview;
+
+    card.append(head, text);
+    return card;
+  }
+
+  private buildActionChoice(): HTMLElement {
+    const group = document.createElement('div');
+    group.className = 'gptx-segment';
+
+    const download = document.createElement('button');
+    download.className = 'gptx-segment-item selected';
+    download.innerHTML = `${downloadIconSvg}<span>${t('downloadFile')}</span>`;
+
+    const copy = document.createElement('button');
+    copy.className = 'gptx-segment-item';
+    copy.innerHTML = `${copyIconSvg}<span>${t('copyToClipboard')}</span>`;
+
+    const select = (clipboard: boolean) => {
+      this.toClipboard = clipboard;
+      download.classList.toggle('selected', !clipboard);
+      copy.classList.toggle('selected', clipboard);
+    };
+    download.addEventListener('click', () => select(false));
+    copy.addEventListener('click', () => select(true));
+
+    group.append(download, copy);
+    return group;
+  }
+
+  private buildScope(): HTMLElement {
+    const options = this.options!;
+    const scope = document.createElement('div');
+    scope.className = 'gptx-scope';
+
+    const allChip = document.createElement('button');
+    allChip.className = 'gptx-chip';
+    allChip.textContent = t('allMessages');
+
+    const lastChip = document.createElement('button');
+    lastChip.className = 'gptx-chip';
+    lastChip.textContent = t('lastN');
+
+    const stepper = document.createElement('div');
+    stepper.className = 'gptx-stepper';
+    const minus = document.createElement('button');
+    minus.className = 'gptx-step';
+    minus.textContent = '−';
+    const count = document.createElement('input');
+    count.className = 'gptx-count';
+    count.type = 'text';
+    count.inputMode = 'numeric';
+    count.value = String(options.messageLimit ?? 10);
+    count.setAttribute('aria-label', t('lastNMessages'));
+    const plus = document.createElement('button');
+    plus.className = 'gptx-step';
+    plus.textContent = '+';
+    stepper.append(minus, count, plus);
+
+    const clamp = (value: number) => Math.max(1, Math.min(999, value));
+    const syncScope = () => {
+      const limited = options.messageLimit !== null;
+      allChip.classList.toggle('selected', !limited);
+      lastChip.classList.toggle('selected', limited);
+      stepper.classList.toggle('visible', limited);
+    };
+    const setLimit = (value: number) => {
+      options.messageLimit = clamp(value);
+      count.value = String(options.messageLimit);
+      syncScope();
+    };
+
+    allChip.addEventListener('click', () => {
+      options.messageLimit = null;
+      syncScope();
+    });
+    lastChip.addEventListener('click', () => setLimit(Number(count.value) || 10));
+    minus.addEventListener('click', () => setLimit((Number(count.value) || 1) - 1));
+    plus.addEventListener('click', () => setLimit((Number(count.value) || 0) + 1));
+    count.addEventListener('input', () => {
+      count.value = count.value.replace(/\D/g, '').slice(0, 3);
+      if (count.value) options.messageLimit = clamp(Number(count.value));
+    });
+    count.addEventListener('blur', () => setLimit(Number(count.value) || 10));
+
+    scope.append(allChip, lastChip, stepper);
+    syncScope();
+    return scope;
+  }
 
   private buildFormatSelect(): HTMLElement {
     const options = this.options!;
@@ -237,8 +335,13 @@ export class ExportModal {
     const labelFor = (format: ExportFormat) => t(FORMAT_LABEL_KEYS[format]);
     const syncTrigger = () => {
       trigger.innerHTML = `<span class="fmt-icon">${formatIcons[options.format]}</span><span>${labelFor(options.format)}</span><span class="chev">${chevronIconSvg}</span>`;
-      trigger.querySelector('.fmt-icon svg')?.classList.add('fmt');
     };
+
+    const closeMenu = () => {
+      trigger.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('open');
+    };
+    this.closeMenus.push(closeMenu);
 
     const items = new Map<ExportFormat, HTMLButtonElement>();
     for (const format of EXPORT_FORMATS) {
@@ -246,7 +349,6 @@ export class ExportModal {
       item.className = 'gptx-menu-item';
       item.setAttribute('role', 'option');
       item.innerHTML = `<span class="fmt-icon">${formatIcons[format.id]}</span><span>${labelFor(format.id)}</span><span class="tick">${checkIconSvg}</span>`;
-      item.querySelector('.fmt-icon svg')?.classList.add('fmt');
       item.addEventListener('click', () => {
         options.format = format.id;
         for (const [id, el] of items) el.classList.toggle('selected', id === format.id);
@@ -259,18 +361,13 @@ export class ExportModal {
     }
     items.get(options.format)?.classList.add('selected');
 
-    const closeMenu = () => {
-      trigger.setAttribute('aria-expanded', 'false');
-      menu.classList.remove('open');
-    };
-    trigger.addEventListener('click', () => {
+    trigger.addEventListener('click', (event) => {
+      event.stopPropagation();
       const open = trigger.getAttribute('aria-expanded') === 'true';
       trigger.setAttribute('aria-expanded', String(!open));
       menu.classList.toggle('open', !open);
     });
-    this.root?.addEventListener('click', (event) => {
-      if (!wrap.contains(event.target as Node)) closeMenu();
-    });
+    this.root?.addEventListener('click', () => closeMenu());
 
     syncTrigger();
     wrap.append(trigger, menu);
@@ -337,22 +434,30 @@ export class ExportModal {
     submit: HTMLButtonElement,
     cancel: HTMLButtonElement,
   ): Promise<void> {
-    if (this.busy || !this.options) return;
+    if (this.busy || !this.options || !this.request) return;
     this.busy = true;
     submit.disabled = true;
     cancel.disabled = true;
-    submit.innerHTML = `<span class="gptx-spinner"></span><span>${t('exporting')}</span>`;
+    const submitWidth = submit.getBoundingClientRect().width;
+    submit.style.minWidth = `${Math.ceil(submitWidth)}px`;
+    submit.innerHTML = `<span class="gptx-spinner"></span>`;
     status.className = 'gptx-status visible';
-    status.innerHTML = `<span>${this.phaseLabel('fetching')}</span>`;
+    status.textContent = this.phaseLabel('fetching');
 
     void saveOptions(this.options);
 
     try {
-      await runExport(this.conversationId, this.options, (phase) => {
-        status.innerHTML = `<span>${this.phaseLabel(phase)}</span>`;
+      await runExport({
+        conversationId: this.request.conversationId,
+        options: this.options,
+        messageId: this.request.turn?.messageId ?? undefined,
+        toClipboard: this.toClipboard,
+        onPhase: (phase) => {
+          status.textContent = this.phaseLabel(phase);
+        },
       });
       status.className = 'gptx-status visible success';
-      status.innerHTML = `<span class="gptx-check">${checkIconSvg}</span><span>${t('done')}</span>`;
+      status.innerHTML = `<span class="gptx-check">${checkIconSvg}</span><span>${this.toClipboard ? t('copiedToClipboard') : t('done')}</span>`;
       submit.textContent = t('export');
       this.busy = false;
       setTimeout(() => this.close(), 1200);

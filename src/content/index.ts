@@ -2,6 +2,7 @@ import { detectLocale, setLocale } from '@/i18n';
 import { RUNTIME_MESSAGES } from '@/shared/constants';
 import { logger } from '@/shared/logger';
 import { observeDom } from './dom/observe';
+import { describeTurn } from './dom/turn-index';
 import { mountHeaderButton, unmountHeaderButton } from './inject/header-button';
 import { mountTurnButtons, unmountTurnButtons } from './inject/turn-buttons';
 import { getConversationId, watchLocation } from './router';
@@ -13,19 +14,25 @@ let mountScheduled = false;
 function openModal(): void {
   const conversationId = activeConversationId ?? getConversationId();
   if (!conversationId) return;
-  void exportModal.open(conversationId);
+  void exportModal.open({ conversationId });
+}
+
+function openMessageModal(turn: HTMLElement): void {
+  const conversationId = activeConversationId ?? getConversationId();
+  if (!conversationId) return;
+  void exportModal.open({ conversationId, turn: describeTurn(turn) });
 }
 
 function scheduleMount(): void {
   if (mountScheduled) return;
   mountScheduled = true;
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     mountScheduled = false;
     if (!activeConversationId) return;
     setLocale(detectLocale());
     mountHeaderButton(openModal);
-    mountTurnButtons(openModal);
-  });
+    mountTurnButtons(openMessageModal);
+  }, 50);
 }
 
 function handleConversationChange(conversationId: string | null): void {

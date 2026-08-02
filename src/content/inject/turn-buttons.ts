@@ -5,7 +5,7 @@ import { ensurePageStyles } from './page-styles';
 
 const TURN_BUTTON_CLASS = 'gptx-turn-btn';
 
-export function mountTurnButtons(onClick: () => void): void {
+export function mountTurnButtons(onClick: (turnElement: HTMLElement) => void): void {
   const copyButtons = document.querySelectorAll(selectors.copyTurnButton);
   if (copyButtons.length === 0) return;
 
@@ -15,14 +15,17 @@ export function mountTurnButtons(onClick: () => void): void {
     const bar = copyButton.parentElement;
     if (!bar || bar.querySelector(`.${TURN_BUTTON_CLASS}`)) continue;
 
+    const turn = copyButton.closest<HTMLElement>(selectors.conversationTurn);
+    if (!turn) continue;
+
     const button = document.createElement('button');
     button.className = TURN_BUTTON_CLASS;
-    button.setAttribute('aria-label', t('exportChat'));
-    button.innerHTML = `${exportIconSvg}<span>${t('exportChat')}</span>`;
+    button.setAttribute('aria-label', t('exportMessage'));
+    button.innerHTML = `${exportIconSvg}<span>${t('exportMessage')}</span>`;
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      onClick();
+      onClick(turn);
     });
 
     const acrobat = bar.querySelector(selectors.acrobatTurnButton);
