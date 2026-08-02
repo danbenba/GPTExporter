@@ -14,7 +14,11 @@ function readMessage(turn: Element | null): { id: string | null; role: string; t
   return {
     id: authored.getAttribute('data-message-id'),
     role: authored.getAttribute('data-message-author-role') ?? 'assistant',
-    text: ((authored as HTMLElement).innerText ?? '').replace(/\s+/g, ' ').trim(),
+    text: ((authored as HTMLElement).innerText ?? '')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+      .slice(0, 1200),
   };
 }
 

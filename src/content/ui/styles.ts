@@ -308,33 +308,38 @@ export const shadowStyles = `
   margin-bottom: 4px;
 }
 .gptx-preview-thread {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
+  gap: 12px;
+  padding: 14px 16px;
+  max-height: 168px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 42px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 42px), transparent 100%);
+}
+.gptx-preview-thread.short {
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 .gptx-preview-user { display: flex; justify-content: flex-end; }
 .gptx-preview-bubble {
   max-width: 85%;
-  padding: 8px 14px;
-  border-radius: 18px;
+  padding: 9px 18px;
+  border-radius: 22px;
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  font-size: 13px;
-  line-height: 1.5;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .gptx-preview-assistant {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--text-secondary);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .gptx-actions {

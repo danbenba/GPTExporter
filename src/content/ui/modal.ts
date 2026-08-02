@@ -15,6 +15,7 @@ import {
   spinnerSvg,
 } from './icons';
 import { shadowStyles } from './styles';
+import { showToast } from './toast';
 
 interface ToggleDefinition {
   key: keyof ExportOptions;
@@ -252,6 +253,9 @@ export class ExportModal {
     }
 
     card.appendChild(thread);
+    setTimeout(() => {
+      if (thread.scrollHeight <= thread.clientHeight + 1) thread.classList.add('short');
+    }, 0);
     return card;
   }
 
@@ -500,7 +504,11 @@ export class ExportModal {
       status.innerHTML = `<span class="gptx-check">${checkIconSvg}</span><span>${this.toClipboard ? t('copiedToClipboard') : t('done')}</span>`;
       submit.textContent = t('export');
       this.busy = false;
-      setTimeout(() => this.close(), 1200);
+      const toastMessage = this.toClipboard ? t('copiedToClipboard') : t('done');
+      setTimeout(() => {
+        this.close();
+        showToast(toastMessage);
+      }, 700);
     } catch (error) {
       this.busy = false;
       submit.disabled = false;
