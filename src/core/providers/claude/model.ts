@@ -39,15 +39,26 @@ export type ClaudeContentBlock =
   | ClaudeToolUseBlock
   | ClaudeToolResultBlock;
 
+export interface ClaudeAsset {
+  url?: string;
+  image_width?: number;
+  image_height?: number;
+}
+
 export interface ClaudeFile {
   file_uuid?: string;
   uuid?: string;
+  id?: string;
   file_name?: string;
   file_kind?: string;
   preview_url?: string;
   thumbnail_url?: string;
-  preview_asset?: { url?: string; image_width?: number; image_height?: number };
-  thumbnail_asset?: { url?: string; image_width?: number; image_height?: number };
+  document_url?: string;
+  original_url?: string;
+  url?: string;
+  preview_asset?: ClaudeAsset;
+  thumbnail_asset?: ClaudeAsset;
+  document_asset?: ClaudeAsset;
 }
 
 export interface ClaudeAttachment {
@@ -70,6 +81,7 @@ export interface ClaudeMessage {
   truncated?: boolean;
   stop_reason?: string;
   files?: ClaudeFile[];
+  files_v2?: ClaudeFile[];
   attachments?: ClaudeAttachment[];
 }
 

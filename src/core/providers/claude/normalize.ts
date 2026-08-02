@@ -7,20 +7,33 @@ import {
   CLAUDE_ROOT_PARENT,
   type ClaudeContentBlock,
   type ClaudeConversation,
+  type ClaudeFile,
   type ClaudeMessage,
 } from './model';
+import {
+  applyArtifactCommand,
+  ARTIFACT_TOOLS,
+  extractLegacyArtifacts,
+  isCodeArtifact,
+  stripLegacyArtifactTags,
+  type ArtifactState,
+} from './artifacts';
 
 export function walkClaudeBranch(conversation: ClaudeConversation): ClaudeMessage[] {
   const byUuid = new Map(conversation.chat_messages.map((message) => [message.uuid, message]));
   const ordered: ClaudeMessage[] = [];
   const seen = new Set<string>();
 
+  const messages = conversation.chat_messages ?? [];
   let cursor: string | null | undefined = conversation.current_leaf_message_uuid;
+  if (!cursor || !byUuid.has(cursor)) {
+    cursor = messages[messages.length - 1]?.uuid;
+  }
   while (cursor && cursor !== CLAUDE_ROOT_PARENT && byUuid.has(cursor) && !seen.has(cursor)) {
     seen.add(cursor);
-    const message = byUuid.get(cursor)!;
+    const message: ClaudeMessage = byUuid.get(cursor)!;
     ordered.push(message);
-    cursor = message.parent_message_uuid;
+    cursor = message.parent_message_uuid ?? null;
   }
 
   if (ordered.length === 0) {
@@ -28,6 +41,31 @@ export function walkClaudeBranch(conversation: ClaudeConversation): ClaudeMessag
   }
   ordered.reverse();
   return ordered;
+}
+
+function fileUrl(file: ClaudeFile): string | null {
+  return (
+    file.preview_asset?.url ??
+    file.preview_url ??
+    file.document_asset?.url ??
+    file.document_url ??
+    file.thumbnail_asset?.url ??
+    file.thumbnail_url ??
+    file.original_url ??
+    file.url ??
+    null
+  );
+}
+
+function mergeFiles(message: ClaudeMessage): ClaudeFile[] {
+  const merged = new Map<string, ClaudeFile>();
+  for (const file of [...(message.files_v2 ?? []), ...(message.files ?? [])]) {
+    const key = file.file_uuid ?? file.uuid ?? file.id;
+    if (!key) continue;
+    const existing = merged.get(key);
+    if (!existing || (!fileUrl(existing) && fileUrl(file))) merged.set(key, file);
+  }
+  return [...merged.values()];
 }
 
 function toolLabel(name: string | undefined): string {
@@ -45,11 +83,24 @@ function stringifyToolPayload(value: unknown): string {
   }
 }
 
-function blockToNormalized(block: ClaudeContentBlock): NormalizedBlock[] {
+function blockToNormalized(
+  block: ClaudeContentBlock,
+  artifacts: Map<string, ArtifactState>,
+): NormalizedBlock[] {
   switch (block.type) {
     case 'text': {
-      const text = (block.text ?? '').trim();
-      return text ? [{ kind: 'paragraph', text }] : [];
+      const raw = block.text ?? '';
+      const legacy = extractLegacyArtifacts(raw);
+      const text = legacy.length > 0 ? stripLegacyArtifactTags(raw) : raw.trim();
+      const blocks: NormalizedBlock[] = text ? [{ kind: 'paragraph', text }] : [];
+      for (const artifact of legacy) {
+        blocks.push(
+          isCodeArtifact(artifact)
+            ? { kind: 'code', text: artifact.text, language: artifact.language, title: artifact.title }
+            : { kind: 'writing', text: artifact.text, title: artifact.title },
+        );
+      }
+      return blocks;
     }
     case 'thinking': {
       if (block.hidden || block.thinking_hidden) return [];
@@ -57,17 +108,19 @@ function blockToNormalized(block: ClaudeContentBlock): NormalizedBlock[] {
       return text ? [{ kind: 'thought', text }] : [];
     }
     case 'tool_use': {
-      if (block.name === 'artifacts') {
-        const input = block.input ?? {};
-        const content = typeof input.content === 'string' ? input.content : '';
-        if (!content.trim()) return [];
-        const language = typeof input.language === 'string' ? input.language : undefined;
-        const title = typeof input.title === 'string' ? input.title : undefined;
-        const isCode = typeof input.type === 'string' && input.type.includes('code');
+      if (block.name && ARTIFACT_TOOLS.has(block.name)) {
+        const previousId =
+          (typeof block.input?.id === 'string' && block.input.id) ||
+          (typeof block.input?.path === 'string' && block.input.path) ||
+          '';
+        const state = applyArtifactCommand(block, artifacts.get(previousId));
+        if (!state) return [];
+        artifacts.set(state.id, state);
+        if (!state.text.trim()) return [];
         return [
-          isCode || language
-            ? { kind: 'code', text: content, language, title }
-            : { kind: 'writing', text: content, title },
+          isCodeArtifact(state)
+            ? { kind: 'code', text: state.text, language: state.language, title: state.title }
+            : { kind: 'writing', text: state.text, title: state.title },
         ];
       }
       const payload = stringifyToolPayload(block.input);
@@ -89,7 +142,10 @@ function blockToNormalized(block: ClaudeContentBlock): NormalizedBlock[] {
   }
 }
 
-function messageToNormalized(message: ClaudeMessage): NormalizedMessage | null {
+function messageToNormalized(
+  message: ClaudeMessage,
+  artifacts: Map<string, ArtifactState>,
+): NormalizedMessage | null {
   const blocks: NormalizedBlock[] = [];
 
   for (const attachment of message.attachments ?? []) {
@@ -99,21 +155,24 @@ function messageToNormalized(message: ClaudeMessage): NormalizedMessage | null {
     }
   }
 
-  for (const file of message.files ?? []) {
-    const url = file.preview_asset?.url ?? file.preview_url ?? file.thumbnail_url;
-    if (url) {
-      blocks.push({
-        kind: 'image',
-        text: '',
-        assetPointer: url,
-        width: file.preview_asset?.image_width,
-        height: file.preview_asset?.image_height,
-      });
+  for (const file of mergeFiles(message)) {
+    const url = fileUrl(file);
+    if (!url) continue;
+    if (file.file_kind && file.file_kind !== 'image') {
+      blocks.push({ kind: 'context', text: file.file_name ?? url, title: file.file_name, url });
+      continue;
     }
+    blocks.push({
+      kind: 'image',
+      text: '',
+      assetPointer: url,
+      width: file.preview_asset?.image_width ?? file.thumbnail_asset?.image_width,
+      height: file.preview_asset?.image_height ?? file.thumbnail_asset?.image_height,
+    });
   }
 
   if (message.content?.length) {
-    for (const block of message.content) blocks.push(...blockToNormalized(block));
+    for (const block of message.content) blocks.push(...blockToNormalized(block, artifacts));
   } else if (message.text?.trim()) {
     blocks.push({ kind: 'paragraph', text: message.text.trim() });
   }
@@ -141,8 +200,9 @@ export function normalizeClaudeConversation(
   conversation: ClaudeConversation,
   url: string,
 ): NormalizedConversation {
+  const artifacts = new Map<string, ArtifactState>();
   const messages = walkClaudeBranch(conversation)
-    .map(messageToNormalized)
+    .map((message) => messageToNormalized(message, artifacts))
     .filter((message): message is NormalizedMessage => message !== null);
 
   return {
