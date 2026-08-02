@@ -20,7 +20,7 @@ export interface NormalizedBlock {
   height?: number;
 }
 
-export type ConversationSource = 'chatgpt' | 'claude';
+export type ConversationSource = 'chatgpt' | 'claude' | 'grok' | 'gemini' | 'perplexity';
 
 export interface NormalizedCitation {
   url?: string;

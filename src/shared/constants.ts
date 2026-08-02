@@ -2,6 +2,7 @@ export const SUPPORTED_ORIGINS = [
   'https://chatgpt.com',
   'https://chat.openai.com',
   'https://claude.ai',
+  'https://grok.com',
 ] as const;
 
 export const EXTENSION_PREFIX = 'gptx';

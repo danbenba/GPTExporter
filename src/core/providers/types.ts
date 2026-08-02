@@ -1,6 +1,6 @@
 import type { NormalizedConversation } from '@/core/model/normalized';
 
-export type ProviderId = 'chatgpt' | 'claude';
+export type ProviderId = 'chatgpt' | 'claude' | 'grok' | 'gemini' | 'perplexity';
 
 export interface ProviderTheme {
   fontFamily: string;

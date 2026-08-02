@@ -30,7 +30,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*', 'https://claude.ai/*'],
+      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*', 'https://claude.ai/*', 'https://grok.com/*'],
       js: ['src/content/index.ts'],
       run_at: 'document_idle',
     },
@@ -40,5 +40,6 @@ export default defineManifest({
     'https://chatgpt.com/*',
     'https://chat.openai.com/*',
     'https://claude.ai/*',
+    'https://grok.com/*',
   ],
 });
