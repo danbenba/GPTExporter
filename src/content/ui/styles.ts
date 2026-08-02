@@ -5,8 +5,6 @@ export const shadowStyles = `
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 .gptx-root {
-  --font: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
-  --spring: linear(0, .00506 1.18%, .02044 2.46%, .08322 5.391%, .46561 17.652%, .63901 24.342%, .76663 31.093%, .85981 38.454%, .89862 42.934%, .92965 47.845%, .95366 53.305%, .97154 59.516%, .99189 74.867%, .9991);
   position: fixed;
   inset: 0;
   z-index: 2147483000;
@@ -17,57 +15,13 @@ export const shadowStyles = `
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
 }
-.gptx-root[data-theme="dark"] {
-  --bg-primary: #212121;
-  --bg-secondary: #303030;
-  --bg-tertiary: #414141;
-  --bg-elevated: #1b1b1b;
-  --scrim: #00000080;
-  --border-default: #ffffff26;
-  --border-light: #ffffff0d;
-  --border-xlight: #ffffff1a;
-  --border-btn: rgba(255,255,255,.15);
-  --text-primary: #fff;
-  --text-secondary: #cdcdcd;
-  --text-tertiary: #9b9b9b;
-  --text-inverted: #0d0d0d;
-  --surface-hover: rgba(255,255,255,.1);
-  --accent: #3a83f7;
-  --btn-primary-bg: #f9f9f9;
-  --btn-primary-bg-hover: #ececec;
-  --danger: #ff8583;
-  --success: #53b559;
-  --shadow-long: 0 8px 16px rgba(0,0,0,.32), inset 0 0 1px rgba(255,255,255,.2), 0 0 1px rgba(0,0,0,.62);
-  color-scheme: dark;
-}
-.gptx-root[data-theme="light"] {
-  --bg-primary: #fff;
-  --bg-secondary: #f1f1f1;
-  --bg-tertiary: #ececec;
-  --bg-elevated: #f9f9f9;
-  --scrim: rgba(0,0,0,.5);
-  --border-default: #00000026;
-  --border-light: #0000000d;
-  --border-xlight: #0000001a;
-  --border-btn: rgba(0,0,0,.15);
-  --text-primary: #0d0d0d;
-  --text-secondary: #5d5d5d;
-  --text-tertiary: #8f8f8f;
-  --text-inverted: #fff;
-  --surface-hover: rgba(0,0,0,.07);
-  --accent: #3a83f7;
-  --btn-primary-bg: #0d0d0d;
-  --btn-primary-bg-hover: #2f2f2f;
-  --danger: #ba2623;
-  --success: #3a843f;
-  --shadow-long: 0 8px 16px rgba(0,0,0,.16), 0 0 1px rgba(0,0,0,.4);
-  color-scheme: light;
-}
 
 .gptx-overlay {
   position: absolute;
   inset: 0;
   background: var(--scrim);
+  backdrop-filter: var(--scrim-blur);
+  -webkit-backdrop-filter: var(--scrim-blur);
   opacity: 0;
   transition: opacity .2s ease;
 }
@@ -82,7 +36,7 @@ export const shadowStyles = `
   flex-direction: column;
   background: var(--bg-primary);
   color: var(--text-primary);
-  border-radius: 16px;
+  border-radius: var(--radius-modal);
   box-shadow: var(--shadow-long);
   opacity: 0;
   transform: scale(.96) translateY(8px);
@@ -465,7 +419,7 @@ export const shadowStyles = `
   padding: 0 16px;
   white-space: nowrap;
   flex: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   border: 1px solid transparent;
   display: inline-flex;
   align-items: center;
