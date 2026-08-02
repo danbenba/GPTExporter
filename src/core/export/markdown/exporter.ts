@@ -77,7 +77,7 @@ export const markdownExporter: Exporter = {
       }
     }
 
-    lines.push('---', '', `*${EXPORT_CREDIT_TEXT} — [danbenba.dev](${EXPORT_CREDIT_URL})*`);
+    lines.push('---', '', `*${EXPORT_CREDIT_TEXT}*`, '', `[danbenba.dev](${EXPORT_CREDIT_URL})`);
 
     return {
       kind: 'download',

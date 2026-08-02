@@ -44,7 +44,7 @@ export const textExporter: Exporter = {
       lines.push('', '----------------------------------------', '');
     }
 
-    lines.push(`${EXPORT_CREDIT_TEXT} — ${EXPORT_CREDIT_URL}`);
+    lines.push(EXPORT_CREDIT_TEXT, EXPORT_CREDIT_URL);
 
     return {
       kind: 'download',
