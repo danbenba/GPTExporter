@@ -6,7 +6,13 @@ const CONVERSATION_QUERY = 'tree=True&rendering_mode=messages&render_all_tools=t
 let cachedOrgId: string | null = null;
 
 async function claudeGet<T>(path: string): Promise<T> {
-  const response = await fetch(path, { credentials: 'include' });
+  const response = await fetch(path, {
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
+  if (response.headers.get('cf-mitigated') === 'challenge') {
+    throw new AuthError('Cloudflare challenge, reload claude.ai and retry');
+  }
   if (response.status === 401 || response.status === 403) {
     throw new AuthError(`Claude request rejected with ${response.status}`);
   }
@@ -20,8 +26,22 @@ async function claudeGet<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+function organizationFromCookie(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)lastActiveOrg=([0-9a-f-]{36})/i);
+  return match ? match[1] : null;
+}
+
 export async function getOrganizationId(force = false): Promise<string> {
   if (!force && cachedOrgId) return cachedOrgId;
+
+  if (!force) {
+    const fromCookie = organizationFromCookie();
+    if (fromCookie) {
+      cachedOrgId = fromCookie;
+      return cachedOrgId;
+    }
+  }
+
   const organizations = await claudeGet<ClaudeOrganization[]>('/api/organizations');
   const usable =
     organizations.find((org) => org.capabilities?.includes('chat')) ?? organizations[0];
