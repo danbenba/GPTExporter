@@ -1,7 +1,7 @@
 {
   "name": "gpt-exporter",
   "version": "1.0.0",
-  "description": "Chrome extension to export ChatGPT conversations to Markdown, HTML, JSON, TXT or PDF with a native ChatGPT-style interface.",
+  "description": "Chrome extension to export ChatGPT conversations to Markdown, HTML, JSON, TXT or PDF",
   "type": "module",
   "license": "MIT",
   "author": {
