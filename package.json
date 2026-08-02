@@ -1,9 +1,30 @@
 {
   "name": "gpt-exporter",
   "version": "1.0.0",
-  "private": true,
+  "description": "Chrome extension to export ChatGPT conversations to Markdown, HTML, JSON, TXT or PDF with a native ChatGPT-style interface.",
   "type": "module",
-  "description": "Chrome extension to export ChatGPT conversations (Markdown, HTML, JSON, TXT, PDF) with a pixel-perfect ChatGPT-style UI.",
+  "license": "MIT",
+  "author": {
+    "name": "danbenba",
+    "url": "https://danbenba.dev"
+  },
+  "homepage": "https://github.com/danbenba/GPTExporter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danbenba/GPTExporter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/danbenba/GPTExporter/issues"
+  },
+  "keywords": [
+    "chatgpt",
+    "chrome-extension",
+    "manifest-v3",
+    "export",
+    "markdown",
+    "pdf",
+    "typescript"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
