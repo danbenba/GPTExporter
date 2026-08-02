@@ -5,7 +5,15 @@ import { t } from '@/i18n';
 import { isDarkTheme } from '@/content/dom/observe';
 import type { TurnLocation } from '@/content/dom/turn-index';
 import { loadOptions, saveOptions } from '@/content/options-store';
-import { checkIconSvg, chevronIconSvg, closeIconSvg, copyIconSvg, downloadIconSvg, formatIcons } from './icons';
+import {
+  checkIconSvg,
+  chevronIconSvg,
+  closeIconSvg,
+  copyIconSvg,
+  downloadIconSvg,
+  formatIcons,
+  spinnerSvg,
+} from './icons';
 import { shadowStyles } from './styles';
 
 interface ToggleDefinition {
@@ -33,6 +41,7 @@ export class ExportModal {
   private options: ExportOptions | null = null;
   private request: ModalRequest | null = null;
   private toClipboard = false;
+  private includeUserTurn = false;
   private busy = false;
   private conditionalRows = new Map<string, HTMLElement>();
   private closeMenus: Array<() => void> = [];
@@ -44,6 +53,7 @@ export class ExportModal {
     if (this.host) this.destroy();
     this.request = request;
     this.toClipboard = false;
+    this.includeUserTurn = false;
     this.conditionalRows.clear();
     this.closeMenus = [];
     this.options = await loadOptions();
@@ -121,7 +131,6 @@ export class ExportModal {
     body.appendChild(this.buildFormatSelect());
 
     if (this.isMessageMode) {
-      body.appendChild(this.sectionLabel(t('action')));
       body.appendChild(this.buildActionChoice());
     }
 
@@ -222,19 +231,48 @@ export class ExportModal {
     const card = document.createElement('div');
     card.className = 'gptx-preview';
 
-    const head = document.createElement('div');
-    head.className = 'gptx-preview-head';
-    head.textContent = `${t('messagePreview')} · ${turn.role === 'user' ? t('user') : t('assistant')}`;
+    const thread = document.createElement('div');
+    thread.className = 'gptx-preview-thread';
 
-    const text = document.createElement('div');
-    text.className = 'gptx-preview-text';
-    text.textContent = turn.preview;
+    if (turn.userPreview) {
+      const user = document.createElement('div');
+      user.className = 'gptx-preview-user';
+      const bubble = document.createElement('div');
+      bubble.className = 'gptx-preview-bubble';
+      bubble.textContent = turn.userPreview;
+      user.appendChild(bubble);
+      thread.appendChild(user);
+    }
 
-    card.append(head, text);
+    if (turn.assistantPreview) {
+      const assistant = document.createElement('div');
+      assistant.className = 'gptx-preview-assistant';
+      assistant.textContent = turn.assistantPreview;
+      thread.appendChild(assistant);
+    }
+
+    card.appendChild(thread);
     return card;
   }
 
   private buildActionChoice(): HTMLElement {
+    const turn = this.request!.turn!;
+    const row = document.createElement('div');
+    row.className = 'gptx-actions';
+
+    if (turn.role === 'assistant' && turn.userMessageId) {
+      const withUser = document.createElement('button');
+      withUser.className = 'gptx-chip';
+      withUser.textContent = t('withUserMessage');
+      withUser.setAttribute('aria-pressed', 'false');
+      withUser.addEventListener('click', () => {
+        this.includeUserTurn = !this.includeUserTurn;
+        withUser.classList.toggle('selected', this.includeUserTurn);
+        withUser.setAttribute('aria-pressed', String(this.includeUserTurn));
+      });
+      row.appendChild(withUser);
+    }
+
     const group = document.createElement('div');
     group.className = 'gptx-segment';
 
@@ -255,7 +293,8 @@ export class ExportModal {
     copy.addEventListener('click', () => select(true));
 
     group.append(download, copy);
-    return group;
+    row.appendChild(group);
+    return row;
   }
 
   private buildScope(): HTMLElement {
@@ -440,7 +479,7 @@ export class ExportModal {
     cancel.disabled = true;
     const submitWidth = submit.getBoundingClientRect().width;
     submit.style.minWidth = `${Math.ceil(submitWidth)}px`;
-    submit.innerHTML = `<span class="gptx-spinner"></span>`;
+    submit.innerHTML = spinnerSvg;
     status.className = 'gptx-status visible';
     status.textContent = this.phaseLabel('fetching');
 
@@ -451,6 +490,7 @@ export class ExportModal {
         conversationId: this.request.conversationId,
         options: this.options,
         messageId: this.request.turn?.messageId ?? undefined,
+        extraMessageId: this.includeUserTurn ? this.request.turn?.userMessageId : undefined,
         toClipboard: this.toClipboard,
         onPhase: (phase) => {
           status.textContent = this.phaseLabel(phase);
