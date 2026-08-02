@@ -62,7 +62,7 @@ export const grokProvider: Provider = {
   async resolveAsset(pointer) {
     if (!pointer) return null;
     if (/^https?:\/\//.test(pointer)) return pointer;
-    return `${location.origin}${pointer.startsWith('/') ? '' : '/'}${pointer}`;
+    return `https://assets.grok.com/${pointer.replace(/^\//, '')}`;
   },
   isDarkTheme() {
     if (document.documentElement.classList.contains('light')) return false;

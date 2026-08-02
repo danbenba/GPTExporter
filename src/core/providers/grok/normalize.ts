@@ -6,7 +6,30 @@ import type {
 import type { GrokConversationMeta, GrokResponse } from './api';
 
 function isAssistant(sender: string | undefined): boolean {
-  return (sender ?? '').toLowerCase() !== 'human';
+  const value = (sender ?? '').toLowerCase();
+  return value !== 'human' && value !== 'user';
+}
+
+function stripToolSentinels(text: string): string {
+  return text.replace(/<xai:tool_usage_card>[\s\S]*?<\/xai:tool_usage_card>/g, '').trim();
+}
+
+function cardImageUrls(cards: string[] | undefined): string[] {
+  const urls: string[] = [];
+  for (const raw of cards ?? []) {
+    try {
+      const card = JSON.parse(raw) as {
+        image_chunk?: { imageUrl?: string; progress?: number; moderated?: boolean };
+      };
+      const chunk = card.image_chunk;
+      if (chunk?.imageUrl && chunk.progress === 100 && !chunk.moderated) {
+        urls.push(chunk.imageUrl);
+      }
+    } catch {
+      continue;
+    }
+  }
+  return urls;
 }
 
 function toEpochSeconds(value: string | undefined): number | undefined {
@@ -20,9 +43,12 @@ function responseToMessage(response: GrokResponse): NormalizedMessage | null {
 
   const blocks: NormalizedBlock[] = [];
 
+  const trace = (response.thinkingTrace ?? '').trim();
+  if (trace) blocks.push({ kind: 'thought', text: trace });
+
   for (const step of response.steps ?? []) {
-    const thought = (step.thinking ?? '').trim();
-    if (thought) blocks.push({ kind: 'thought', text: thought, title: step.title });
+    const thought = (step.thinking ?? step.text ?? '').trim();
+    if (thought) blocks.push({ kind: 'thought', text: stripToolSentinels(thought), title: step.title });
   }
 
   const message = (response.message ?? '').trim();
@@ -30,6 +56,9 @@ function responseToMessage(response: GrokResponse): NormalizedMessage | null {
 
   for (const url of response.generatedImageUrls ?? []) {
     if (url) blocks.push({ kind: 'image', text: '', assetPointer: url });
+  }
+  for (const url of cardImageUrls(response.cardAttachmentsJson)) {
+    blocks.push({ kind: 'image', text: '', assetPointer: url });
   }
   for (const attachment of response.imageAttachments ?? []) {
     const pointer = attachment.url ?? attachment.fileUri;
@@ -67,7 +96,8 @@ export function normalizeGrokConversation(
 ): NormalizedConversation {
   const messages = responses
     .map(responseToMessage)
-    .filter((message): message is NormalizedMessage => message !== null);
+    .filter((message): message is NormalizedMessage => message !== null)
+    .sort((a, b) => (a.createTime ?? 0) - (b.createTime ?? 0));
 
   const model = [...messages].reverse().find((message) => message.model)?.model;
 

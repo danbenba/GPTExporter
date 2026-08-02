@@ -23,16 +23,22 @@ export interface GrokStep {
   title?: string;
   message?: string;
   thinking?: string;
+  text?: string;
+  tags?: string[];
 }
 
 export interface GrokResponse {
   responseId: string;
+  parentResponseId?: string;
+  threadParentId?: string;
   message?: string;
   sender?: string;
   createTime?: string;
   partial?: boolean;
   isControl?: boolean;
   model?: string;
+  thinkingTrace?: string;
+  cardAttachmentsJson?: string[];
   steps?: GrokStep[];
   webSearchResults?: GrokWebSearchResult[];
   citedWebSearchResults?: GrokWebSearchResult[];
@@ -81,22 +87,66 @@ export async function fetchGrokMeta(conversationId: string): Promise<GrokConvers
   );
 }
 
+const PLACEHOLDER_PREFIXES = ['optimistic_', 'streaming_in_progress_'];
+const LOAD_BATCH_SIZE = 40;
+
+function isPlaceholder(responseId: string): boolean {
+  return PLACEHOLDER_PREFIXES.some((prefix) => responseId.startsWith(prefix));
+}
+
+export function activeGrokBranch(responses: GrokResponse[]): GrokResponse[] {
+  const main = responses.filter((entry) => !entry.threadParentId);
+  if (main.length === 0) return [];
+
+  const byId = new Map(main.map((entry) => [entry.responseId, entry]));
+  const parents = new Set(main.map((entry) => entry.parentResponseId).filter(Boolean));
+  const leaves = main.filter((entry) => !parents.has(entry.responseId));
+  const leaf =
+    leaves.sort((a, b) =>
+      String(a.createTime ?? '').localeCompare(String(b.createTime ?? '')),
+    )[leaves.length - 1] ?? main[main.length - 1];
+
+  const branch: GrokResponse[] = [];
+  const seen = new Set<string>();
+  let cursor: string | undefined = leaf.responseId;
+  while (cursor && byId.has(cursor) && !seen.has(cursor)) {
+    seen.add(cursor);
+    const node: GrokResponse = byId.get(cursor)!;
+    branch.push(node);
+    cursor = node.parentResponseId || undefined;
+  }
+
+  branch.reverse();
+  return branch;
+}
+
 export async function fetchGrokResponses(conversationId: string): Promise<GrokResponse[]> {
   const listing = await grokJson<{ responses?: GrokResponse[] }>(
     `/rest/app-chat/conversations/${encodeURIComponent(conversationId)}/responses`,
   );
-  const responses = listing.responses ?? [];
-  if (responses.length === 0) return [];
+  const listed = (listing.responses ?? []).filter((entry) => !isPlaceholder(entry.responseId));
+  if (listed.length === 0) return [];
 
-  const loaded = await grokJson<{ responses?: GrokResponse[] }>(
-    `/rest/app-chat/conversations/${encodeURIComponent(conversationId)}/load-responses`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ responseIds: responses.map((entry) => entry.responseId) }),
-    },
-  );
+  const branch = activeGrokBranch(listed);
+  const wanted = branch.length > 0 ? branch : listed;
+  const missing = wanted.filter((entry) => !entry.message?.trim());
 
-  const byId = new Map((loaded.responses ?? []).map((entry) => [entry.responseId, entry]));
-  return responses.map((entry) => ({ ...entry, ...(byId.get(entry.responseId) ?? {}) }));
+  if (missing.length > 0) {
+    const hydrated = new Map<string, GrokResponse>();
+    for (let index = 0; index < missing.length; index += LOAD_BATCH_SIZE) {
+      const slice = missing.slice(index, index + LOAD_BATCH_SIZE);
+      const loaded = await grokJson<{ responses?: GrokResponse[] }>(
+        `/rest/app-chat/conversations/${encodeURIComponent(conversationId)}/load-responses`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ responseIds: slice.map((entry) => entry.responseId) }),
+        },
+      );
+      for (const entry of loaded.responses ?? []) hydrated.set(entry.responseId, entry);
+    }
+    return wanted.map((entry) => ({ ...entry, ...(hydrated.get(entry.responseId) ?? {}) }));
+  }
+
+  return wanted;
 }

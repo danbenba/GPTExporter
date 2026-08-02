@@ -41,5 +41,6 @@ export default defineManifest({
     'https://chat.openai.com/*',
     'https://claude.ai/*',
     'https://grok.com/*',
+    'https://assets.grok.com/*',
   ],
 });
