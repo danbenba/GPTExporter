@@ -30,7 +30,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*', 'https://claude.ai/*', 'https://grok.com/*', 'https://gemini.google.com/*'],
+      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*', 'https://claude.ai/*', 'https://grok.com/*', 'https://gemini.google.com/*', 'https://www.perplexity.ai/*', 'https://perplexity.ai/*'],
       js: ['src/content/index.ts'],
       run_at: 'document_idle',
     },
@@ -43,5 +43,7 @@ export default defineManifest({
     'https://grok.com/*',
     'https://assets.grok.com/*',
     'https://gemini.google.com/*',
+    'https://www.perplexity.ai/*',
+    'https://perplexity.ai/*',
   ],
 });

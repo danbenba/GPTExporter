@@ -4,6 +4,8 @@ export const SUPPORTED_ORIGINS = [
   'https://claude.ai',
   'https://grok.com',
   'https://gemini.google.com',
+  'https://www.perplexity.ai',
+  'https://perplexity.ai',
 ] as const;
 
 export const EXTENSION_PREFIX = 'gptx';
