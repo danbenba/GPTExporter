@@ -2,7 +2,7 @@ import { AuthError, RateLimitError } from '@/core/api/errors';
 import { runExport, type ExportPhase } from '@/core/export/run-export';
 import { EXPORT_FORMATS, type ExportFormat, type ExportOptions } from '@/core/model/export-options';
 import { t } from '@/i18n';
-import { isDarkTheme } from '@/content/dom/observe';
+import type { Provider } from '@/core/providers/types';
 import type { TurnLocation } from '@/content/dom/turn-index';
 import { loadOptions, saveOptions } from '@/content/options-store';
 import {
@@ -15,6 +15,7 @@ import {
   spinnerSvg,
 } from './icons';
 import { shadowStyles } from './styles';
+import { themeVars } from './theme-vars';
 import { showToast } from './toast';
 
 interface ToggleDefinition {
@@ -24,6 +25,7 @@ interface ToggleDefinition {
 }
 
 export interface ModalRequest {
+  provider: Provider;
   conversationId: string;
   turn?: TurnLocation;
 }
@@ -87,13 +89,14 @@ export class ExportModal {
     this.host.id = 'gptx-modal-host';
     const shadow = this.host.attachShadow({ mode: 'open' });
 
+    const provider = this.request!.provider;
     const style = document.createElement('style');
-    style.textContent = shadowStyles;
+    style.textContent = themeVars(provider.theme) + shadowStyles;
     shadow.appendChild(style);
 
     this.root = document.createElement('div');
     this.root.className = 'gptx-root';
-    this.root.dataset.theme = isDarkTheme() ? 'dark' : 'light';
+    this.root.dataset.theme = provider.isDarkTheme() ? 'dark' : 'light';
     shadow.appendChild(this.root);
 
     const overlay = document.createElement('div');
@@ -491,10 +494,15 @@ export class ExportModal {
 
     try {
       await runExport({
+        provider: this.request.provider,
         conversationId: this.request.conversationId,
         options: this.options,
         messageId: this.request.turn?.messageId ?? undefined,
         extraMessageId: this.includeUserTurn ? this.request.turn?.userMessageId : undefined,
+        messageIndex: this.request.turn?.messageIndex ?? undefined,
+        extraMessageIndex: this.includeUserTurn
+          ? this.request.turn?.userMessageIndex
+          : undefined,
         toClipboard: this.toClipboard,
         onPhase: (phase) => {
           status.textContent = this.phaseLabel(phase);
@@ -505,9 +513,15 @@ export class ExportModal {
       submit.textContent = t('export');
       this.busy = false;
       const toastMessage = this.toClipboard ? t('copiedToClipboard') : t('done');
+      const provider = this.request.provider;
       setTimeout(() => {
         this.close();
-        showToast(toastMessage);
+        showToast(toastMessage, {
+          dark: provider.isDarkTheme(),
+          fontFamily: provider.theme.fontFamily,
+          radius: provider.theme.radiusModal,
+          accent: provider.theme.dark.success,
+        });
       }, 700);
     } catch (error) {
       this.busy = false;

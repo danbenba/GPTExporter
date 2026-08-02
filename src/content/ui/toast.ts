@@ -1,4 +1,3 @@
-import { isDarkTheme } from '@/content/dom/observe';
 import { checkIconSvg } from './icons';
 
 const HOST_ID = 'gptx-toast-host';
@@ -48,7 +47,7 @@ const toastStyles = `
   border: 1px solid #0000001a;
 }
 .gptx-toast svg { width: 18px; height: 18px; flex: none; }
-.gptx-toast[data-tone="success"] svg { color: #53b559; }
+.gptx-toast[data-tone="success"] svg { color: var(--toast-icon, #53b559); }
 .gptx-toast[data-tone="error"] svg { color: #ff8583; }
 @keyframes gptx-toast-open {
   0% { opacity: 0; transform: translateY(-100%); }
@@ -78,7 +77,16 @@ function ensureHost(): ShadowRoot {
   return shadow;
 }
 
-export function showToast(message: string, tone: 'success' | 'error' = 'success'): void {
+export interface ToastOptions {
+  tone?: 'success' | 'error';
+  dark?: boolean;
+  fontFamily?: string;
+  radius?: string;
+  accent?: string;
+}
+
+export function showToast(message: string, options: ToastOptions = {}): void {
+  const tone = options.tone ?? 'success';
   const shadow = ensureHost();
   const root = shadow.querySelector('.gptx-toast-root');
   if (!root) return;
@@ -91,8 +99,13 @@ export function showToast(message: string, tone: 'success' | 'error' = 'success'
 
   const toast = document.createElement('div');
   toast.className = 'gptx-toast';
-  toast.dataset.theme = isDarkTheme() ? 'dark' : 'light';
+  toast.dataset.theme = options.dark === false ? 'light' : 'dark';
   toast.dataset.tone = tone;
+  if (options.fontFamily) toast.style.fontFamily = options.fontFamily;
+  if (options.radius) toast.style.borderRadius = options.radius;
+  if (options.accent && tone === 'success') {
+    toast.style.setProperty('--toast-icon', options.accent);
+  }
   toast.setAttribute('role', 'status');
   toast.innerHTML = `${checkIconSvg}<span></span>`;
   const label = toast.querySelector('span');
