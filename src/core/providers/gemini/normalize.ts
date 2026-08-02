@@ -68,6 +68,31 @@ function candidateOf(turn: GeminiTurn): unknown {
   return at(turn, [3, 0, 0]) ?? at(turn, [3, 0]);
 }
 
+function collectImageUrls(candidate: unknown): string[] {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+
+  const walk = (node: unknown, depth: number): void => {
+    if (depth > 9 || urls.length > 12) return;
+    if (typeof node === 'string') {
+      if (/^https?:\/\//.test(node) && !/googleusercontent\.com\/(image_generation|card)_content/.test(node)) {
+        if (!seen.has(node)) {
+          seen.add(node);
+          urls.push(node);
+        }
+      }
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const child of node) walk(child, depth + 1);
+    }
+  };
+
+  walk(at(candidate, [12, 7]), 0);
+  walk(at(candidate, [12, 1]), 0);
+  return urls;
+}
+
 export function turnToMessages(turn: GeminiTurn, index: number): NormalizedMessage[] {
   const messages: NormalizedMessage[] = [];
   const requestId = asText(at(turn, [0, 1])) || `turn-${index}`;
@@ -96,6 +121,10 @@ export function turnToMessages(turn: GeminiTurn, index: number): NormalizedMessa
     if (!answer) answer = clean(asText(at(candidate, [22, 0])));
     if (!answer) answer = clean(deepestText(at(candidate, [1])));
     if (answer) blocks.push({ kind: 'paragraph', text: answer });
+
+    for (const url of collectImageUrls(candidate)) {
+      blocks.push({ kind: 'image', text: '', assetPointer: url });
+    }
 
     if (blocks.length > 0) {
       messages.push({
