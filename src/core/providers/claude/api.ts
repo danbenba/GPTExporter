@@ -1,7 +1,12 @@
 import { ApiError, AuthError, RateLimitError } from '@/core/api/errors';
 import type { ClaudeConversation, ClaudeOrganization } from './model';
 
-const CONVERSATION_QUERY = 'tree=True&rendering_mode=messages&render_all_tools=true';
+const CONVERSATION_QUERIES = [
+  'tree=True&rendering_mode=messages&render_all_tools=true',
+  'tree=True&rendering_mode=messages',
+  'rendering_mode=messages',
+  '',
+];
 
 let cachedOrgId: string | null = null;
 
@@ -56,23 +61,48 @@ export function invalidateOrganization(): void {
   cachedOrgId = null;
 }
 
+function conversationPath(
+  organizationId: string,
+  conversationId: string,
+  query: string,
+): string {
+  const base = `/api/organizations/${organizationId}/chat_conversations/${conversationId}`;
+  return query ? `${base}?${query}` : base;
+}
+
 export async function fetchClaudeConversation(
   conversationId: string,
 ): Promise<ClaudeConversation> {
-  const organizationId = await getOrganizationId();
-  const path = `/api/organizations/${organizationId}/chat_conversations/${conversationId}?${CONVERSATION_QUERY}`;
-  try {
-    return await claudeGet<ClaudeConversation>(path);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      invalidateOrganization();
-      const retryOrganization = await getOrganizationId(true);
-      return claudeGet<ClaudeConversation>(
-        `/api/organizations/${retryOrganization}/chat_conversations/${conversationId}?${CONVERSATION_QUERY}`,
+  let organizationId = await getOrganizationId();
+  let lastError: unknown = null;
+  let retriedOrganization = false;
+
+  for (const query of CONVERSATION_QUERIES) {
+    try {
+      return await claudeGet<ClaudeConversation>(
+        conversationPath(organizationId, conversationId, query),
       );
+    } catch (error) {
+      lastError = error;
+      if (error instanceof RateLimitError) throw error;
+
+      if (error instanceof AuthError && !retriedOrganization) {
+        retriedOrganization = true;
+        invalidateOrganization();
+        organizationId = await getOrganizationId(true);
+        try {
+          return await claudeGet<ClaudeConversation>(
+            conversationPath(organizationId, conversationId, query),
+          );
+        } catch (retryError) {
+          lastError = retryError;
+          if (retryError instanceof AuthError) throw retryError;
+        }
+      }
     }
-    throw error;
   }
+
+  throw lastError ?? new ApiError(500, 'Unable to fetch the Claude conversation');
 }
 
 export async function resolveClaudeAsset(pointer: string): Promise<string | null> {
