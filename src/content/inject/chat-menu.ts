@@ -1,7 +1,7 @@
 import { t } from '@/i18n';
 import type { Provider } from '@/core/providers/types';
 import { logoSvg } from '@/content/ui/icons';
-import { ensurePageStyles } from './page-styles';
+import { buttonStyle, styleIcon, styleMenuItem } from './button-style';
 
 const MENU_ITEM_CLASS = 'gptx-menu-item-gptx';
 const CONVERSATION_ID_PATTERN =
@@ -51,17 +51,34 @@ export function mountChatMenuItem(
     const conversationId = findConversationId(menu, provider);
     if (!conversationId) continue;
 
-    ensurePageStyles(provider);
 
     const shortcut = provider.selectors.chatMenuShortcut;
     const item = document.createElement('button');
     item.className = MENU_ITEM_CLASS;
     item.type = 'button';
     item.setAttribute('role', 'menuitem');
+    const style = buttonStyle(provider);
     item.innerHTML =
       `<span class="gptx-menu-icon">${logoSvg}</span>` +
       `<span class="gptx-menu-label">${t('exportChat')}</span>` +
       (shortcut ? `<span class="gptx-menu-kbd">${shortcut}</span>` : '');
+
+    styleMenuItem(item, style, provider.id === 'chatgpt');
+    styleIcon(item, 16);
+    const kbd = item.querySelector('.gptx-menu-kbd') as HTMLElement | null;
+    if (kbd) {
+      kbd.style.setProperty('margin-left', 'auto', 'important');
+      kbd.style.setProperty('padding-left', '16px', 'important');
+      kbd.style.setProperty('font-size', '13px', 'important');
+      kbd.style.setProperty('color', style.palette.textTertiary, 'important');
+    }
+    const label = item.querySelector('.gptx-menu-label') as HTMLElement | null;
+    if (label) {
+      label.style.setProperty('flex', '1', 'important');
+      label.style.setProperty('min-width', '0', 'important');
+      label.style.setProperty('overflow', 'hidden', 'important');
+      label.style.setProperty('text-overflow', 'ellipsis', 'important');
+    }
 
     let cleanup = (): void => {};
     const trigger = () => {

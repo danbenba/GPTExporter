@@ -1,9 +1,10 @@
 import { t } from '@/i18n';
 import type { Provider } from '@/core/providers/types';
 import { exportIconSvg } from '@/content/ui/icons';
-import { ensurePageStyles } from './page-styles';
+import { buttonStyle, styleIcon, styleSeparator, styleTurnButton } from './button-style';
 
 const TURN_BUTTON_CLASS = 'gptx-turn-btn';
+const SEPARATOR_CLASS = 'gptx-turn-sep';
 
 const TURN_MARKERS: Partial<Record<Provider['id'], string>> = {
   claude: '.font-claude-response, [data-testid="user-message"]',
@@ -32,7 +33,7 @@ export function mountTurnButtons(
   const anchors = document.querySelectorAll(provider.selectors.turnActionButton);
   if (anchors.length === 0) return;
 
-  ensurePageStyles(provider);
+  const style = buttonStyle(provider);
 
   for (const anchor of anchors) {
     const bar = anchor.parentElement;
@@ -46,7 +47,10 @@ export function mountTurnButtons(
     button.type = 'button';
     button.setAttribute('aria-label', t('exportMessage'));
     button.title = t('exportMessage');
-    button.innerHTML = `${exportIconSvg}<span>${t('exportMessage')}</span>`;
+    button.innerHTML = exportIconSvg;
+    styleTurnButton(button, style);
+    styleIcon(button, style.compact ? 16 : 17);
+
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -54,8 +58,9 @@ export function mountTurnButtons(
     });
 
     const separator = document.createElement('span');
-    separator.className = 'gptx-turn-sep';
+    separator.className = SEPARATOR_CLASS;
     separator.setAttribute('aria-hidden', 'true');
+    styleSeparator(separator, style);
 
     const competitor = provider.selectors.competitorTurnButton
       ? bar.querySelector(provider.selectors.competitorTurnButton)
@@ -70,7 +75,7 @@ export function mountTurnButtons(
 }
 
 export function unmountTurnButtons(): void {
-  for (const node of document.querySelectorAll(`.${TURN_BUTTON_CLASS}, .gptx-turn-sep`)) {
+  for (const node of document.querySelectorAll(`.${TURN_BUTTON_CLASS}, .${SEPARATOR_CLASS}`)) {
     node.remove();
   }
 }
