@@ -32,6 +32,7 @@ export const claudeProvider: Provider = {
     chatMenu: '[role="menu"]',
     chatMenuItem: '[role="menuitem"]',
     chatMenuTrigger: 'button[aria-label^="Plus d\'options pour"], button[aria-label^="More options for"]',
+    chatMenuShortcut: 'E',
   },
   toast: {
     placement: 'bottom-right',

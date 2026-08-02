@@ -47,6 +47,7 @@ export interface ProviderSelectors {
   chatMenu?: string;
   chatMenuItem?: string;
   chatMenuTrigger?: string;
+  chatMenuShortcut?: string;
 }
 
 export interface ProviderToastStyle {
