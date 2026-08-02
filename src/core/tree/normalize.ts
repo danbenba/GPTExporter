@@ -11,9 +11,20 @@ import type {
 } from '@/core/model/normalized';
 import { walkActiveBranch } from './branch';
 
+function cleanText(text: string): string {
+  return text
+    .split('\n')
+    .filter((line) => !/^\s*:::/.test(line.trim()) || line.trim().replace(/^:::\S*/, '').trim().length > 0)
+    .map((line) => line.replace(/^\s*:::writing\{[^}]*\}\s*/, '').replace(/\s*:::\s*$/, ''))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function partToBlocks(part: MultimodalPart): NormalizedBlock[] {
   if (typeof part === 'string') {
-    return part.trim() ? [{ kind: 'paragraph', text: part }] : [];
+    const text = cleanText(part);
+    return text ? [{ kind: 'paragraph', text }] : [];
   }
   if (part.content_type === 'image_asset_pointer') {
     return [
@@ -36,8 +47,10 @@ function contentToBlocks(content: MessageContent): NormalizedBlock[] {
   switch (content.content_type) {
     case 'text':
       return (content.parts ?? [])
-        .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
-        .map((part) => ({ kind: 'paragraph' as const, text: part }));
+        .filter((part): part is string => typeof part === 'string')
+        .map((part) => cleanText(part))
+        .filter((text) => text.length > 0)
+        .map((text) => ({ kind: 'paragraph' as const, text }));
     case 'multimodal_text':
       return (content.parts ?? []).flatMap(partToBlocks);
     case 'code':
