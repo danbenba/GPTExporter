@@ -61,31 +61,7 @@ header.meta .meta-grid a { color: var(--text-secondary); }
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
-.turn-assistant {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-.turn-assistant .content { min-width: 0; flex: 1; }
-.avatar {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2px;
-}
-.avatar svg { width: 17px; height: 17px; }
-.avatar-user {
-  background: var(--bubble);
-  color: var(--text-secondary);
-}
-.avatar-assistant {
-  border: 1px solid var(--border);
-  color: var(--text);
-}
+.turn-assistant .content { min-width: 0; }
 .turn-time {
   font-size: 11.5px;
   color: var(--text-tertiary);
@@ -225,7 +201,12 @@ footer.credits {
   margin-top: 64px;
   text-align: center;
   font-size: 12px;
+  line-height: 1.7;
   color: var(--text-tertiary);
+}
+footer.credits a {
+  display: block;
+  color: var(--text-secondary);
 }
 @media print {
   :root { --bg: #fff; --text: #0d0d0d; --text-secondary: #424242; --text-tertiary: #676767; --bubble: #f1f1f1; --code-bg: #f9f9f9; --border: #00000026; --border-light: #0000001a; --accent: #2c67c5; }
@@ -238,8 +219,6 @@ footer.credits {
   th { background: #00000008; }
   .writing-card { background: #f7f7f8; }
   .copy-btn { display: none; }
-  .avatar-user { background: #ececec; color: #424242; }
-  .avatar-assistant { border-color: #00000026; color: #0d0d0d; }
   .tok-com { color: #6e7781; }
   .tok-kw { color: #0550ae; }
   .tok-str { color: #0a7d56; }

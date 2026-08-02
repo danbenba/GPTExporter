@@ -8,10 +8,6 @@ import { messages, type Locale } from '@/i18n/messages';
 import { codeBlockHtml, escapeHtml, renderMarkdown, setCopyLabel } from './mini-markdown';
 import { renderHtmlPage } from './template';
 
-const USER_AVATAR = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3.6" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 19.4C5.9 16.4 8.7 14.6 12 14.6C15.3 14.6 18.1 16.4 19.2 19.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
-
-const ASSISTANT_AVATAR = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L13.9 8.1L19 10L13.9 11.9L12 17L10.1 11.9L5 10L10.1 8.1L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 15.5L19.3 17.7L21.5 18.5L19.3 19.3L18.5 21.5L17.7 19.3L15.5 18.5L17.7 17.7L18.5 15.5Z" fill="currentColor"/></svg>`;
-
 const PENCIL_ICON = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.6 3.2L16.8 6.4L7.2 16H4V12.8L13.6 3.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
 
 function blockToHtml(block: NormalizedBlock, assets: AssetMap, locale: Locale): string {
@@ -71,11 +67,11 @@ function messageToHtml(
     const text = message.blocks
       .map((block) => (block.kind === 'image' ? blockToHtml(block, assets, locale) : escapeHtml(block.text)))
       .join('\n');
-    return `<div class="turn">${time}<div class="turn-user"><div class="avatar avatar-user">${USER_AVATAR}</div><div class="bubble">${text}</div></div></div>`;
+    return `<div class="turn">${time}<div class="turn-user"><div class="bubble">${text}</div></div></div>`;
   }
 
   const body = message.blocks.map((block) => blockToHtml(block, assets, locale)).join('\n');
-  return `<div class="turn">${time}<div class="turn-assistant"><div class="avatar avatar-assistant">${ASSISTANT_AVATAR}</div><div class="content">${body}${citations}</div></div></div>`;
+  return `<div class="turn">${time}<div class="turn-assistant"><div class="content">${body}${citations}</div></div></div>`;
 }
 
 export function buildConversationHtml(
