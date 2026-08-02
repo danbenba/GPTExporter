@@ -2,19 +2,33 @@ import { ApiError, AuthError, RateLimitError } from '@/core/api/errors';
 import type { ClaudeConversation, ClaudeOrganization } from './model';
 
 const CONVERSATION_QUERIES = [
+  'tree=True&rendering_mode=messages&render_all_tools=true&consistency=eventual',
   'tree=True&rendering_mode=messages&render_all_tools=true',
   'tree=True&rendering_mode=messages',
   'rendering_mode=messages',
-  '',
 ];
+
+const REQUEST_TIMEOUT_MS = 60_000;
+const TRANSIENT_STATUSES = new Set([500, 502, 503, 504, 524, 529]);
 
 let cachedOrgId: string | null = null;
 
-async function claudeGet<T>(path: string): Promise<T> {
-  const response = await fetch(path, {
-    credentials: 'include',
-    headers: { Accept: 'application/json' },
-  });
+export async function claudeGet<T>(
+  path: string,
+  extraHeaders: Record<string, string> = {},
+): Promise<T> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(path, {
+      credentials: 'include',
+      headers: { Accept: 'application/json', ...extraHeaders },
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timer);
+  }
   if (response.headers.get('cf-mitigated') === 'challenge') {
     throw new AuthError('Cloudflare challenge, reload claude.ai and retry');
   }
@@ -99,7 +113,22 @@ export async function fetchClaudeConversation(
           if (retryError instanceof AuthError) throw retryError;
         }
       }
+
+      const status = error instanceof ApiError ? error.status : 0;
+      const isTimeout = error instanceof DOMException && error.name === 'AbortError';
+      if (!isTimeout && status !== 0 && !TRANSIENT_STATUSES.has(status) && status < 400) {
+        throw error;
+      }
     }
+  }
+
+  try {
+    const latest = await claudeGet<{ snapshot?: ClaudeConversation }>(
+      `/api/organizations/${organizationId}/chat_conversations/${conversationId}/latest`,
+    );
+    if (latest.snapshot?.chat_messages) return latest.snapshot;
+  } catch (error) {
+    lastError = error;
   }
 
   throw lastError ?? new ApiError(500, 'Unable to fetch the Claude conversation');
