@@ -29,9 +29,9 @@ export const shadowStyles = `
 
 .gptx-modal {
   position: relative;
-  width: 520px;
+  width: 560px;
   max-width: calc(100vw - 32px);
-  max-height: 88vh;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
@@ -213,7 +213,7 @@ export const shadowStyles = `
   opacity: 0;
   transition: max-height .28s ease, opacity .2s ease;
 }
-.gptx-adv.open { max-height: 480px; opacity: 1; }
+.gptx-adv.open { max-height: 560px; opacity: 1; }
 
 .gptx-row {
   display: flex;

@@ -516,12 +516,7 @@ export class ExportModal {
       const provider = this.request.provider;
       setTimeout(() => {
         this.close();
-        showToast(toastMessage, {
-          dark: provider.isDarkTheme(),
-          fontFamily: provider.theme.fontFamily,
-          radius: provider.theme.radiusModal,
-          accent: provider.theme.dark.success,
-        });
+        showToast(provider, toastMessage);
       }, 700);
     } catch (error) {
       this.busy = false;
