@@ -1,4 +1,4 @@
-import type { ProviderTheme } from '../types';
+import type { ProviderTheme } from '@/core/providers/types';
 
 export const claudeTheme: ProviderTheme = {
   fontFamily:

@@ -1,6 +1,6 @@
 # GPT Exporter
 
-Extension Chrome (Manifest V3) pour exporter vos conversations ChatGPT en **Markdown**, **HTML**, **JSON**, **TXT** ou **PDF**, avec une interface intégrée au design natif de ChatGPT (thème OLED inclus).
+Extension Chrome (Manifest V3) pour exporter vos conversations **ChatGPT** et **Claude** en **Markdown**, **HTML**, **JSON**, **TXT** ou **PDF**, avec une interface intégrée au design natif de chaque site (thème OLED inclus).
 
 ![icon](public/icons/icon-128.png)
 
@@ -14,7 +14,17 @@ Extension Chrome (Manifest V3) pour exporter vos conversations ChatGPT en **Mark
 - Options : réponses et messages utilisateur, raisonnement, sorties d'outils, sources, horodatage, en-tête détaillé, intégration des images, nombre de messages (tous ou N derniers).
 - Interface bilingue français / anglais (détection automatique de la langue de ChatGPT).
 - Thèmes clair et sombre/OLED suivant le thème de la page.
+- Entrée **« Exporter le chat »** dans le menu contextuel de chaque conversation de la barre latérale.
 - Chaque export est signé **Exported by GPT Exporter — danbenba.dev**.
+
+### Sites pris en charge
+
+| Site | Récupération | Design appliqué |
+|---|---|---|
+| chatgpt.com | `/backend-api/conversation/{id}` (arbre `mapping`) | Palette et composants ChatGPT, toast descendant |
+| claude.ai | `/api/organizations/{org}/chat_conversations/{uuid}?tree=True&rendering_mode=messages&render_all_tools=true` | Palette Anthropic (clay `#d97757`), toast glissant |
+
+Sur Claude, l'extension reconstruit la branche active via `parent_message_uuid`, matérialise les **artifacts** (`create` / `update` / `rewrite`), fusionne `files` et `files_v2`, et dégrade progressivement les paramètres de requête si une conversation refuse de se charger.
 
 ## Installation (développement)
 
