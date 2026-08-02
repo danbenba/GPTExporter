@@ -129,11 +129,8 @@ export const shadowStyles = `
 .gptx-select[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .gptx-select .chev svg { width: 16px; height: 16px; }
 .gptx-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 10;
+  position: fixed;
+  z-index: 2147483010;
   background: var(--bg-secondary);
   border: 1px solid var(--border-light);
   border-radius: 12px;

@@ -128,6 +128,7 @@ export class ExportModal {
     const body = document.createElement('div');
     body.className = 'gptx-body';
     modal.appendChild(body);
+    this.modalBody = body;
 
     if (this.isMessageMode) {
       body.appendChild(this.buildPreview());
@@ -232,6 +233,7 @@ export class ExportModal {
     ];
   }
 
+  private modalBody: HTMLElement | null = null;
   private previewThread: HTMLElement | null = null;
   private previewUserRow: HTMLElement | null = null;
 
@@ -413,6 +415,14 @@ export class ExportModal {
       trigger.setAttribute('aria-expanded', 'false');
       menu.classList.remove('open');
     };
+    const positionMenu = () => {
+      const rect = trigger.getBoundingClientRect();
+      menu.style.position = 'fixed';
+      menu.style.left = `${rect.left}px`;
+      menu.style.top = `${rect.bottom + 6}px`;
+      menu.style.width = `${rect.width}px`;
+      menu.style.right = 'auto';
+    };
     this.closeMenus.push(closeMenu);
 
     const items = new Map<ExportFormat, HTMLButtonElement>();
@@ -434,15 +444,21 @@ export class ExportModal {
     items.get(options.format)?.classList.add('selected');
 
     trigger.addEventListener('click', (event) => {
+      event.preventDefault();
       event.stopPropagation();
       const open = trigger.getAttribute('aria-expanded') === 'true';
+      if (!open) positionMenu();
       trigger.setAttribute('aria-expanded', String(!open));
       menu.classList.toggle('open', !open);
     });
+    menu.addEventListener('click', (event) => event.stopPropagation());
     this.root?.addEventListener('click', () => closeMenu());
+    this.modalBody?.addEventListener('scroll', () => closeMenu());
+    window.addEventListener('resize', closeMenu);
 
     syncTrigger();
-    wrap.append(trigger, menu);
+    wrap.append(trigger);
+    this.root?.appendChild(menu);
     return wrap;
   }
 
