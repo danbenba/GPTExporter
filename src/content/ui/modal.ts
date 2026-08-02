@@ -289,7 +289,10 @@ export class ExportModal {
     const row = document.createElement('div');
     row.className = 'gptx-actions';
 
-    if (turn.role === 'assistant' && turn.userMessageId) {
+    const hasPrompt =
+      turn.userMessageId !== null ||
+      (turn.userMessageIndex !== null && turn.userMessageIndex >= 0);
+    if (turn.role === 'assistant' && hasPrompt) {
       const withUser = document.createElement('button');
       withUser.className = 'gptx-chip';
       withUser.textContent = t('withUserMessage');
