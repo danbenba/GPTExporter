@@ -21,7 +21,7 @@ const css = `
 .gptx-header-btn:hover {
   background: var(--interactive-bg-secondary-hover, rgba(255,255,255,.1));
 }
-.gptx-header-btn svg { width: 18px; height: 18px; flex: none; }
+.gptx-header-btn svg { width: 18px; height: 18px; flex: none; display: block; }
 
 .gptx-turn-btn {
   display: inline-flex;
@@ -44,7 +44,7 @@ const css = `
   background: var(--interactive-bg-secondary-hover, rgba(255,255,255,.1));
   color: var(--text-primary, #fff);
 }
-.gptx-turn-btn svg { width: 15px; height: 15px; flex: none; }
+.gptx-turn-btn svg { width: 16px; height: 16px; flex: none; display: block; }
 `;
 
 export function ensurePageStyles(): void {
