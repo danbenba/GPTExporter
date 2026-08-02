@@ -44,10 +44,12 @@ document.addEventListener('click', function (event) {
   var container = button.closest('pre, .writing-card');
   var source = container ? container.querySelector('code, .writing-body') : null;
   if (!source) return;
+  var label = button.querySelector('span');
+  if (!label) return;
   navigator.clipboard.writeText(source.innerText).then(function () {
-    var previous = button.textContent;
-    button.textContent = COPIED_LABEL;
-    setTimeout(function () { button.textContent = previous; }, 1500);
+    var previous = label.textContent;
+    label.textContent = COPIED_LABEL;
+    setTimeout(function () { label.textContent = previous; }, 1500);
   });
 });
 </script>

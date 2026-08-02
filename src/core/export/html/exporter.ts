@@ -5,10 +5,10 @@ import type { NormalizedBlock, NormalizedConversation, NormalizedMessage } from 
 import type { ExportOptions } from '@/core/model/export-options';
 import { EXPORT_CREDIT_TEXT, EXPORT_CREDIT_URL } from '@/shared/constants';
 import { messages, type Locale } from '@/i18n/messages';
-import { codeBlockHtml, escapeHtml, renderMarkdown, setCopyLabel } from './mini-markdown';
+import { codeBlockHtml, copyButtonHtml, escapeHtml, renderMarkdown, setCopyLabel } from './mini-markdown';
 import { renderHtmlPage } from './template';
 
-const PENCIL_ICON = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.6 3.2L16.8 6.4L7.2 16H4V12.8L13.6 3.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+const PENCIL_ICON = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"><path d="M13.75 3.542a1.77 1.77 0 0 1 2.5 2.5l-8.75 8.75-3.333.833.833-3.333 8.75-8.75Z"/></svg>`;
 
 function blockToHtml(block: NormalizedBlock, assets: AssetMap, locale: Locale): string {
   const dict = messages[locale];
@@ -18,7 +18,7 @@ function blockToHtml(block: NormalizedBlock, assets: AssetMap, locale: Locale): 
     case 'execution-output':
       return codeBlockHtml(block.text, 'stdout');
     case 'writing':
-      return `<div class="writing-card"><div class="writing-head"><span class="writing-title">${PENCIL_ICON}${dict.writingLabel}</span><button class="copy-btn" type="button" data-copy>${dict.copy}</button></div><div class="writing-body">${renderMarkdown(block.text)}</div></div>`;
+      return `<div class="writing-card"><div class="writing-head"><span class="writing-title">${PENCIL_ICON}${dict.writingLabel}</span>${copyButtonHtml()}</div><div class="writing-body">${renderMarkdown(block.text)}</div></div>`;
     case 'quote': {
       const source = block.url
         ? `<div><a href="${escapeHtml(block.url)}" target="_blank" rel="noopener">${escapeHtml(block.title ?? block.url)}</a></div>`

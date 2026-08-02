@@ -2,12 +2,18 @@ import { highlightCode } from './highlight';
 
 let copyLabel = 'Copy';
 
+export const copyGlyph = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"><path d="M8.125 7.083h6.25c.575 0 1.042.467 1.042 1.042v6.25c0 .575-.467 1.042-1.042 1.042h-6.25a1.042 1.042 0 0 1-1.042-1.042v-6.25c0-.575.467-1.042 1.042-1.042Z"/><path d="M12.5 5V4.583c0-.575-.467-1.041-1.042-1.041h-5.83c-.576 0-1.045.466-1.045 1.041v5.834c0 .575.467 1.041 1.042 1.041H5.833"/></svg>`;
+
 export function setCopyLabel(label: string): void {
   copyLabel = label;
 }
 
+export function copyButtonHtml(): string {
+  return `<button class="copy-btn" type="button" data-copy aria-label="${escapeHtml(copyLabel)}">${copyGlyph}<span>${escapeHtml(copyLabel)}</span></button>`;
+}
+
 export function codeBlockHtml(code: string, language = ''): string {
-  return `<pre class="codeblock"><div class="codeblock-head"><span>${escapeHtml(language)}</span><button class="copy-btn" type="button" data-copy>${escapeHtml(copyLabel)}</button></div><code>${highlightCode(code, language)}</code></pre>`;
+  return `<pre class="codeblock"><div class="codeblock-head"><span>${escapeHtml(language)}</span>${copyButtonHtml()}</div><code>${highlightCode(code, language)}</code></pre>`;
 }
 
 export function escapeHtml(value: string): string {

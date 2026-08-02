@@ -11,7 +11,7 @@ export const pageStyles = `
   --text-secondary: #cdcdcd;
   --text-tertiary: #9b9b9b;
   --accent: #3a83f7;
-  --code-bg: #0d0d0d;
+  --code-bg: #303030;
 }
 * { box-sizing: border-box; }
 body {
@@ -69,10 +69,10 @@ header.meta .meta-grid a { color: var(--text-secondary); }
 }
 .turn-user .turn-time { text-align: right; }
 .writing-card {
-  background: var(--bubble);
+  background: var(--code-bg);
   border: 1px solid var(--border-light);
-  border-radius: 16px;
-  margin: 0 0 16px;
+  border-radius: 24px;
+  margin: 16px 0 4px;
   overflow: hidden;
 }
 .writing-head {
@@ -80,37 +80,43 @@ header.meta .meta-grid a { color: var(--text-secondary); }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 10px 8px 16px;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  border-bottom: 1px solid var(--border-light);
+  height: 48px;
+  padding: 6px 6px 6px 20px;
+  color: var(--text);
+  font-size: 14px;
 }
 .writing-head .writing-title {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
-.writing-head svg { width: 14px; height: 14px; }
-.writing-body { padding: 14px 16px 2px; }
-.writing-body p:last-child { margin-bottom: 14px; }
+.writing-head svg { width: 16px; height: 16px; }
+.writing-body { padding: 0 20px 4px; }
+.writing-body p:last-child { margin-bottom: 16px; }
 .copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 8px 12px;
   border: 0;
+  border-radius: 9999px;
   background: transparent;
-  color: var(--text-tertiary);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 8px;
+  color: var(--text);
+  font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
   cursor: pointer;
+  transition: background .15s ease;
 }
-.copy-btn:hover { background: #ffffff14; color: var(--text); }
-.tok-com { color: #999; }
-.tok-kw { color: #2e95d3; }
-.tok-str { color: #00a67d; }
-.tok-num { color: #df3079; }
-.tok-fn { color: #f22c3d; }
+.copy-btn:hover { background: #ffffff1a; }
+.copy-btn svg { width: 16px; height: 16px; flex: none; }
+.tok-com { color: #d8d8d8; }
+.tok-kw { color: #f8a6c8; }
+.tok-str { color: #83d197; }
+.tok-num { color: #b897f4; }
+.tok-fn { color: #b897f4; }
+.tok-id { color: #b897f4; }
 p { margin: 0 0 16px; }
 h3, h4, h5, h6 { margin: 24px 0 12px; font-weight: 600; }
 ul, ol { margin: 0 0 16px; padding-left: 24px; }
@@ -134,8 +140,8 @@ code {
 pre.codeblock {
   background: var(--code-bg);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
-  margin: 0 0 16px;
+  border-radius: 24px;
+  margin: 16px 0 4px;
   overflow: hidden;
 }
 pre.codeblock .codeblock-head {
@@ -143,21 +149,22 @@ pre.codeblock .codeblock-head {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: #2f2f2f;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  padding: 5px 8px 5px 16px;
+  height: 48px;
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  padding: 6px 6px 6px 20px;
 }
 pre.codeblock code {
   display: block;
   background: transparent;
   border: 0;
-  padding: 16px;
+  padding: 0 20px 12px;
   overflow-x: auto;
   white-space: pre;
-  font-size: 13.6px;
-  line-height: 1.6;
+  font-size: 12.25px;
+  line-height: 20px;
 }
 table {
   border-collapse: collapse;
@@ -214,15 +221,16 @@ footer.credits a {
   .page { padding: 0; max-width: 100%; }
   pre.codeblock { break-inside: avoid; }
   .turn { break-inside: avoid-page; }
-  pre.codeblock .codeblock-head { background: #ececec; color: #424242; }
+  pre.codeblock .codeblock-head { background: #f4f4f4; color: #0d0d0d; }
   code { background: #00000008; }
   th { background: #00000008; }
-  .writing-card { background: #f7f7f8; }
+  .writing-card { background: #f4f4f4; }
   .copy-btn { display: none; }
   .tok-com { color: #6e7781; }
-  .tok-kw { color: #0550ae; }
+  .tok-kw { color: #b3246b; }
   .tok-str { color: #0a7d56; }
-  .tok-num { color: #b31d70; }
-  .tok-fn { color: #b02a34; }
+  .tok-num { color: #6f42c1; }
+  .tok-fn { color: #6f42c1; }
+  .tok-id { color: #6f42c1; }
 }
 `;
