@@ -82,6 +82,27 @@ function css(provider: Provider): string {
   background: ${isClaude ? 'rgba(255,255,255,.1)' : 'var(--interactive-bg-secondary-hover, rgba(255,255,255,.1))'};
 }
 .gptx-menu-item-gptx svg { width: 16px; height: 16px; flex: none; display: block; }
+.gptx-menu-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+.gptx-menu-label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gptx-menu-kbd {
+  margin-left: 16px;
+  flex: none;
+  font-size: 13px;
+  line-height: 20px;
+  color: ${isClaude ? '#898781' : 'var(--text-tertiary, #9b9b9b)'};
+}
+@media (pointer: coarse) { .gptx-menu-kbd { display: none; } }
 `;
 }
 

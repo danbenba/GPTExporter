@@ -4,6 +4,7 @@ import { logoSvg } from '@/content/ui/icons';
 import { ensurePageStyles } from './page-styles';
 
 const MENU_ITEM_CLASS = 'gptx-menu-item-gptx';
+const SHORTCUT_KEY = 'E';
 const CONVERSATION_ID_PATTERN =
   /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
 
@@ -50,12 +51,38 @@ export function mountChatMenuItem(
     item.className = MENU_ITEM_CLASS;
     item.type = 'button';
     item.setAttribute('role', 'menuitem');
-    item.innerHTML = `${logoSvg}<span>${t('exportChat')}</span>`;
+    item.innerHTML = `<span class="gptx-menu-icon">${logoSvg}</span><span class="gptx-menu-label">${t('exportChat')}</span><span class="gptx-menu-kbd">${SHORTCUT_KEY}</span>`;
+
+    const trigger = () => {
+      cleanupShortcut();
+      onSelect(conversationId);
+    };
     item.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      onSelect(conversationId);
+      trigger();
     });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== SHORTCUT_KEY.toLowerCase()) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (!document.body.contains(item)) {
+        cleanupShortcut();
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      trigger();
+    };
+    function cleanupShortcut(): void {
+      document.removeEventListener('keydown', onKeyDown, true);
+      observer.disconnect();
+    }
+    const observer = new MutationObserver(() => {
+      if (!document.body.contains(item)) cleanupShortcut();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('keydown', onKeyDown, true);
 
     lastItem.after(item);
     void container;
