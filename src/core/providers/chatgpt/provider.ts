@@ -21,6 +21,19 @@ export const chatgptProvider: Provider = {
     messageRoleAttribute: 'data-message-author-role',
     competitorHeaderButton: '#acrobat-chatgpt-convert-to-pdf',
     competitorTurnButton: '.acrobat-chatgpt-response-convert-btn',
+    chatMenu: '[role="menu"]',
+    chatMenuItem: '[role="menuitem"]',
+  },
+  toast: {
+    placement: 'top-center',
+    openAnimation: 'gptx-toast-slide-down',
+    openDuration: '.24s',
+    openEasing: 'cubic-bezier(.175, .885, .32, 1)',
+    closeAnimation: 'gptx-toast-fade',
+    closeDuration: '.12s',
+    closeEasing: 'cubic-bezier(.4, 0, 1, 1)',
+    radius: '12px',
+    shadow: 'rgba(67, 90, 111, .3) 0 0 1px, rgba(67, 90, 111, .3) 0 5px 8px -4px',
   },
   matches(url = location.href) {
     return this.origins.some((origin) => url.startsWith(origin));

@@ -44,6 +44,21 @@ export interface ProviderSelectors {
   messageRoleAttribute: string;
   competitorHeaderButton?: string;
   competitorTurnButton?: string;
+  chatMenu?: string;
+  chatMenuItem?: string;
+  chatMenuTrigger?: string;
+}
+
+export interface ProviderToastStyle {
+  placement: 'top-center' | 'bottom-right';
+  openAnimation: string;
+  openDuration: string;
+  openEasing: string;
+  closeAnimation: string;
+  closeDuration: string;
+  closeEasing: string;
+  radius: string;
+  shadow: string;
 }
 
 export interface Provider {
@@ -53,6 +68,8 @@ export interface Provider {
   conversationPathPattern: RegExp;
   theme: ProviderTheme;
   selectors: ProviderSelectors;
+  toast: ProviderToastStyle;
+  resolveHeaderAnchor?(): Element | null;
   matches(url?: string): boolean;
   getConversationId(pathname?: string): string | null;
   conversationUrl(conversationId: string): string;
