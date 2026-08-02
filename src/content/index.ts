@@ -5,6 +5,7 @@ import { RUNTIME_MESSAGES } from '@/shared/constants';
 import { logger } from '@/shared/logger';
 import { observeDom } from './dom/observe';
 import { describeTurn } from './dom/turn-index';
+import { mountChatMenuItem } from './inject/chat-menu';
 import { mountHeaderButton, unmountHeaderButton } from './inject/header-button';
 import { mountTurnButtons, unmountTurnButtons } from './inject/turn-buttons';
 import { watchLocation } from './router';
@@ -21,6 +22,11 @@ function openModal(): void {
   void exportModal.open({ provider, conversationId });
 }
 
+function openModalFor(conversationId: string): void {
+  if (!provider) return;
+  void exportModal.open({ provider, conversationId });
+}
+
 function openMessageModal(turn: HTMLElement): void {
   if (!provider) return;
   const conversationId = activeConversationId ?? provider.getConversationId();
@@ -33,8 +39,10 @@ function scheduleMount(): void {
   mountScheduled = true;
   setTimeout(() => {
     mountScheduled = false;
-    if (!provider || !activeConversationId) return;
+    if (!provider) return;
     setLocale(detectLocale());
+    mountChatMenuItem(provider, openModalFor);
+    if (!activeConversationId) return;
     mountHeaderButton(provider, openModal);
     mountTurnButtons(provider, openMessageModal);
   }, 50);
@@ -56,9 +64,7 @@ function bootstrap(): void {
 
   setLocale(detectLocale());
   watchLocation(provider, handleConversationChange);
-  observeDom(() => {
-    if (activeConversationId) scheduleMount();
-  });
+  observeDom(() => scheduleMount());
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type === RUNTIME_MESSAGES.openExportModal) {
