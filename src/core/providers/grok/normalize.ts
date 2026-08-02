@@ -10,6 +10,10 @@ function isAssistant(sender: string | undefined): boolean {
   return value !== 'human' && value !== 'user';
 }
 
+function asString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function stripToolSentinels(text: string): string {
   return text.replace(/<xai:tool_usage_card>[\s\S]*?<\/xai:tool_usage_card>/g, '').trim();
 }
@@ -43,15 +47,17 @@ function responseToMessage(response: GrokResponse): NormalizedMessage | null {
 
   const blocks: NormalizedBlock[] = [];
 
-  const trace = (response.thinkingTrace ?? '').trim();
+  const trace = asString(response.thinkingTrace);
   if (trace) blocks.push({ kind: 'thought', text: trace });
 
   for (const step of response.steps ?? []) {
-    const thought = (step.thinking ?? step.text ?? '').trim();
-    if (thought) blocks.push({ kind: 'thought', text: stripToolSentinels(thought), title: step.title });
+    const thought = asString(step.thinking) || asString(step.text);
+    if (thought) {
+      blocks.push({ kind: 'thought', text: stripToolSentinels(thought), title: asString(step.title) || undefined });
+    }
   }
 
-  const message = (response.message ?? '').trim();
+  const message = asString(response.message);
   if (message) blocks.push({ kind: 'paragraph', text: message });
 
   for (const url of response.generatedImageUrls ?? []) {
