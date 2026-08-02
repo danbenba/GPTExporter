@@ -1,9 +1,10 @@
 import { chatgptProvider } from './chatgpt/provider';
 import { claudeProvider } from './claude/provider';
+import { geminiProvider } from './gemini/provider';
 import { grokProvider } from './grok/provider';
 import type { Provider, ProviderId } from './types';
 
-export const providers: Provider[] = [chatgptProvider, claudeProvider, grokProvider];
+export const providers: Provider[] = [chatgptProvider, claudeProvider, grokProvider, geminiProvider];
 
 export function detectProvider(url = location.href): Provider | null {
   return providers.find((provider) => provider.matches(url)) ?? null;

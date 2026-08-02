@@ -8,7 +8,7 @@ export default defineManifest({
   description: '__MSG_extDescription__',
   version: pkg.version,
   default_locale: 'en',
-  minimum_chrome_version: '110',
+  minimum_chrome_version: '111',
   icons: {
     16: 'icons/icon-16.png',
     32: 'icons/icon-32.png',
@@ -30,7 +30,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*', 'https://claude.ai/*', 'https://grok.com/*'],
+      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*', 'https://claude.ai/*', 'https://grok.com/*', 'https://gemini.google.com/*'],
       js: ['src/content/index.ts'],
       run_at: 'document_idle',
     },
@@ -42,5 +42,6 @@ export default defineManifest({
     'https://claude.ai/*',
     'https://grok.com/*',
     'https://assets.grok.com/*',
+    'https://gemini.google.com/*',
   ],
 });
