@@ -20,6 +20,8 @@ export interface NormalizedBlock {
   height?: number;
 }
 
+export type ConversationSource = 'chatgpt' | 'claude';
+
 export interface NormalizedCitation {
   url?: string;
   title?: string;
@@ -39,6 +41,7 @@ export interface NormalizedConversation {
   id: string;
   title: string;
   url: string;
+  source?: ConversationSource;
   createTime?: number;
   updateTime?: number;
   model?: string;
