@@ -1,8 +1,10 @@
 import type { ExportOptions } from '@/core/model/export-options';
 import type { Provider } from '@/core/providers/types';
 import { getLocale } from '@/i18n';
-import { collectAssets } from './assets';
-import { triggerDownload, triggerPrint } from './download';
+import { collectAssets, downloadAssets, type DownloadedAsset } from './assets';
+import { triggerBlobDownload, triggerDownload, triggerPrint } from './download';
+import { buildZip } from './zip';
+import type { AssetMap } from './types';
 import { applyExportOptions } from './filter';
 import { getExporter } from './registry';
 
@@ -58,13 +60,20 @@ export async function runExport(request: ExportRequest): Promise<string> {
   onPhase?.('assets');
   const wantsAssets =
     options.format === 'html' || options.format === 'pdf' || options.format === 'markdown';
-  const assets = wantsAssets
-    ? await collectAssets(
-        normalized,
-        options.embedImages && options.format !== 'markdown',
-        provider,
-      )
-    : {};
+  const bundleImages = wantsAssets && !options.embedImages && options.format !== 'pdf';
+
+  let assets: AssetMap = {};
+  let downloaded: DownloadedAsset[] = [];
+
+  if (bundleImages) {
+    downloaded = await downloadAssets(normalized, provider);
+    for (const asset of downloaded) assets[asset.pointer] = asset.name;
+    if (downloaded.length === 0) {
+      assets = await collectAssets(normalized, false, provider);
+    }
+  } else if (wantsAssets) {
+    assets = await collectAssets(normalized, options.embedImages, provider);
+  }
 
   onPhase?.('rendering');
   const exporter = getExporter(options.format);
@@ -78,10 +87,21 @@ export async function runExport(request: ExportRequest): Promise<string> {
 
   if (toClipboard) {
     await navigator.clipboard.writeText(artifact.content);
-  } else if (artifact.kind === 'print') {
-    triggerPrint(artifact);
-  } else {
-    triggerDownload(artifact);
+    return artifact.filename;
   }
+  if (artifact.kind === 'print') {
+    triggerPrint(artifact);
+    return artifact.filename;
+  }
+  if (downloaded.length > 0) {
+    const zipName = artifact.filename.replace(/\.[^.]+$/, '') + '.zip';
+    const zip = buildZip([
+      { name: artifact.filename, data: new TextEncoder().encode(artifact.content) },
+      ...downloaded.map((asset) => ({ name: asset.name, data: asset.data })),
+    ]);
+    triggerBlobDownload(zip, zipName);
+    return zipName;
+  }
+  triggerDownload(artifact);
   return artifact.filename;
 }
